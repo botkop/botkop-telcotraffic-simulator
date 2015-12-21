@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script language="JavaScript">
+        var websocket;
+
+        function init() {
+            try {
+                websocket = new WebSocket('ws://localhost:9000/celltowers');
+
+                websocket.onopen = function(msg) {
+                    socketStatus.innerHTML = 'Connected to: ' + event.currentTarget.url;
+                    socketStatus.className = 'open';
+                };
+
+                websocket.onmessage = function(msg) {
+                    var message = event.data;
+                    messagesList.innerHTML += '<li class="received"><span>Received:</span>' + message + '</li>';
+                };
+
+                websocket.onclose = function(msg) {
+                    socketStatus.innerHTML = 'Disconnected - see error log for more information';
+                };
+            } catch(ex) {
+                console.log(ex);
+            }
+        }
+
+        function sendData() {
+            messagesList.innerHTML = '';
+            /* force these values to be numeric, otherwise json will contain strings */
+            var mcc = Number(document.getElementById("mcc").value);
+            var mnc = Number(document.getElementById("mnc").value);
+            var numTrips = Number(document.getElementById("numTrips").value);
+            var json = { "mcc": mcc, "mnc": mnc, "numTrips": numTrips };
+            websocket.send(JSON.stringify(json));
+        };
+
+    </script>
+</head>
+
+<body onload="init()">
+<div id="wrap">
+    <h4>Celltowers</h4>
+
+    <ul id="socketStatus">
+
+    </ul>
+    <br>
+
+    <p>
+        MCC: <input type="text" id="mcc">
+        MNC: <input type="text" id="mnc">
+        # Trips: <input type="text" id="numTrips">
+
+        <input type="submit" value="Get Celltowers" onclick="sendData()">
+    </p>
+
+    <div id="messagesList"></div>
+
+</div>
+</body>
+</html>
+
+<!--
+<head>
+    <title>Instrument Start Page</title>
+    <link rel="stylesheet" media="screen" href="@routes.Assets.versioned(" stylesheets/main.css")"/>
+    <style>
+    </style>
+    <script language="JavaScript">
+        var websocket;
+
+        function init() {
+            try {
+                websocket = new WebSocket('ws://localhost:9000/celltowers');
+
+                websocket.onopen = function(msg) {
+                    socketStatus.innerHTML = 'Connected to: ' + event.currentTarget.url;
+                    socketStatus.className = 'open';
+                };
+
+                websocket.onmessage = function(msg) {
+                    var message = event.data;
+                    messagesList.innerHTML += '<li class="received"><span>Received:</span>' + message + '</li>';
+                };
+
+                websocket.onclose = function(msg) {
+                    socketStatus.innerHTML = 'Disconnected - see error log for more information';
+                };
+            } catch(ex){
+                console.log(ex);
+            }
+        }
+
+        function sendData() {
+            messagesList.innerHTML = '';
+            var mcc = document.getElementById("mcc").value;
+            var mnc = document.getElementById("mnc").value;
+            var json = { "mcc": mcc, "mnc": mnc };
+            websocket.send(json);
+        };
+
+    </script>
+</head>
+
+<body onload="init()">
+<div id="price-wrap">
+    <h4>Celltowers</h4>
+
+    <div id="socketStatus"></div>
+    <br>
+
+    <p>
+        MCC: <input type="text" id="mcc">
+        MNC: <input type="text" id="mnc">
+        # Trips: <input type="text" id="numTrips">
+
+        <input type="submit" value="Get Celltowers" onclick="sendData()">
+    </p>
+
+    <div id="messagesList"></div>
+
+</div>
+
+</body>
+</html>
+
+-->
