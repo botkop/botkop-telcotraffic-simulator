@@ -2,10 +2,11 @@ package model
 
 import anorm._
 import anorm.SqlParser._
+import geo.LatLng
 import play.api.db.DB
 import play.api.Play.current
 
-case class Celltower (mcc: Int, mnc: Int, cell: Int, area: Int, lat: Double, lon: Double)
+case class Celltower (mcc: Int, mnc: Int, cell: Int, area: Int, location: LatLng)
 
 object Celltower {
 
@@ -17,7 +18,7 @@ object Celltower {
             double("cell_towers.lat") ~
             double("cell_towers.lon") map {
                 case mcc ~ mnc ~ cell ~ area ~ lat ~ lon =>
-                    Celltower(mcc, mnc, cell, area, lat, lon)
+                    Celltower(mcc, mnc, cell, area, LatLng(lat, lon))
             }
     }
 
@@ -51,7 +52,7 @@ object Celltower {
             rs.headOption
     }
 
-    def getRandom(mcc: Int, mnc: Int, count: Int): List[Celltower] = DB.withConnection {
+    def getRandom(mcc: Int, mnc: Int, count: Int = 1): List[Celltower] = DB.withConnection {
         val sql: SqlQuery = SQL(s"""
                                    |select *
                                    |from cell_towers
@@ -63,7 +64,6 @@ object Celltower {
         implicit connection =>
             sql.as(celltowerParser)
     }
-
 
 
 }

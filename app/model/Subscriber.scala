@@ -53,7 +53,7 @@ object Subscriber {
             rs.headOption
     }
 
-    def getRandom(count: Int): List[Subscriber] = DB.withConnection {
+    def random(count: Int = 1): List[Subscriber] = DB.withConnection {
         val sql: SqlQuery = SQL(
             s"""
                |select *
