@@ -3,8 +3,9 @@
 # ~~~~
 
 # Home page
-GET     /                           controllers.Application.index
-GET     /celltowers                 controllers.Application.celltowers
+GET     /                          controllers.Application.index
+GET     /simulator                 controllers.TrafficSimulator.simulatorPage
+GET     /simulator/socket          controllers.TrafficSimulator.simulatorSocket
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)

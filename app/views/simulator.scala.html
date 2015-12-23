@@ -1,0 +1,77 @@
+@(implicit request: RequestHeader)
+
+@main("Traffic Simulator") {
+
+<div id="wrap">
+    <h4>Celltowers</h4>
+
+    <ul id="socketStatus"></ul>
+    <br/>
+
+    <div id="inputForm">
+        MCC: <input type="text" id="mcc" value="206"/>
+        MNC: <input type="text" id="mnc" value="10"/>
+        # Trips: <input type="text" id="numTrips" value="2"/>
+        Slide Size (ms): <input type="text" id="slideSize" value="500"/>
+        Velocity (km/h): <input type="text" id="velocity" value="1200"/>
+        <button type="button" id="startButton">start</button>
+        <button type="button" id="stopButton">stop</button>
+    </div>
+    <div id="messagesList"></div>
+</div>
+
+<script type="text/javascript">
+$(function() {
+
+var url = "@routes.TrafficSimulator.simulatorSocket.webSocketURL()";
+var webSocket = new WebSocket(url);
+
+webSocket.onopen = function(msg) {
+    socketStatus.innerHTML = 'Connected to: ' + event.currentTarget.url;
+    socketStatus.className = 'open';
+};
+
+webSocket.onmessage = function(msg) {
+    var message = event.data;
+    messagesList.innerHTML += '<li class="received"><span>Received:</span>' + message + '</li>';
+};
+
+webSocket.onclose = function(msg) {
+    socketStatus.innerHTML = 'Disconnected - see error log for more information';
+};
+
+
+function startSimulator() {
+    messagesList.innerHTML = '';
+    /* force these values to be numeric, otherwise json will contain strings */
+    mcc = parseInt($('#mcc').val());
+    mnc = parseInt($('#mnc').val());
+    numTrips = parseInt($('#numTrips').val());
+    velocity = parseInt($('#velocity').val());
+    slideSize = parseInt($('#slideSize').val());
+
+    var message = { "action": "start", "mcc": mcc, "mnc": mnc, "numTrips": numTrips, "velocity": velocity, "slideSize": slideSize };
+    var json = JSON.stringify(message);
+    console.log(json);
+    webSocket.send(json);
+};
+
+function stopSimulator() {
+    var message = { "action": "stop" };
+    var json = JSON.stringify(message);
+    console.log(json);
+    webSocket.send(json);
+}
+
+$('#startButton').click(function() {
+    startSimulator();
+})
+
+$('#stopButton').click(function() {
+    stopSimulator();
+})
+
+})
+</script>
+
+}

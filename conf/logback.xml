@@ -14,8 +14,10 @@
   -->
   <logger name="play" level="INFO" />
   <logger name="actors" level="DEBUG" />
+  <logger name="controllers" level="DEBUG" />
+  <logger name="model" level="DEBUG" />
 
-  <root level="ERROR">
+  <root level="INFO">
     <appender-ref ref="STDOUT" />
   </root>
 

@@ -6,9 +6,9 @@ import com.typesafe.scalalogging.{LazyLogging, Seq}
 import model.{Route, Subscriber, Trip}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import play.api.test.WithApplication
-import squants.space.Meters
-import squants.{Length, Velocity}
+import squants.Velocity
 import squants.motion.KilometersPerHour
+import squants.space.Meters
 import squants.time.Milliseconds
 
 import scala.concurrent.duration._
@@ -27,11 +27,9 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
 
     def this() = this(ActorSystem("TripActorSpec"))
 
-    /*
     override def afterAll() {
         TestKit.shutdownActorSystem(system)
     }
-    */
 
     "A TripActor" must {
 

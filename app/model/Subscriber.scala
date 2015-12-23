@@ -4,6 +4,7 @@ import anorm._
 import anorm.SqlParser._
 import play.api.db.DB
 import play.api.Play.current
+import scala.language.postfixOps
 
 case class Subscriber(
                          id: Int,

@@ -1,14 +1,28 @@
 package model
 
-import anorm._
 import anorm.SqlParser._
+import anorm._
+import com.typesafe.scalalogging.LazyLogging
 import geo.LatLng
-import play.api.db.DB
 import play.api.Play.current
+import play.api.db.DB
 
-case class Celltower (mcc: Int, mnc: Int, cell: Int, area: Int, location: LatLng)
+import scala.language.postfixOps
 
-object Celltower {
+case class Celltower (mcc: Int, mnc: Int, cell: Int, area: Int, location: LatLng) {
+    def toJson =
+        s"""
+           |{
+           |  "mcc": $mcc,
+           |  "mnc": $mnc,
+           |  "cell": $cell,
+           |  "area": $area,
+           |  "location": ${location.toJson}
+           |}
+         """.stripMargin
+}
+
+object Celltower extends LazyLogging {
 
     val celltowerRowParser: RowParser[Celltower] = {
             int("cell_towers.mcc") ~
@@ -63,6 +77,23 @@ object Celltower {
 
         implicit connection =>
             sql.as(celltowerParser)
+    }
+
+    def getNearest(mcc: Int, mnc: Int, location: LatLng): Celltower = {
+        val all = getAll(mcc, mnc)
+        var minDist = Double.MaxValue
+        var minCelltower: Celltower = null
+
+        all.foreach {
+            case ct: Celltower =>
+                val dist = location.distanceFrom(ct.location)
+                if (dist < minDist) {
+                    minDist = dist
+                    minCelltower = ct
+                }
+        }
+
+        minCelltower
     }
 
 
