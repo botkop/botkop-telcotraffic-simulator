@@ -2,26 +2,161 @@
 
 @main("Traffic Simulator") {
 
-<div id="wrap">
-    <h4>Celltowers</h4>
 
-    <ul id="socketStatus"></ul>
-    <br/>
+<div id="wrapper">
+    <!-- Sidebar -->
+    <div id="sidebar-wrapper">
+        <ul class="sidebar-nav">
+            <li class="sidebar-brand">
+                    Traffic Simulator
+            </li>
 
-    <div id="inputForm">
-        MCC: <input type="text" id="mcc" value="206"/>
-        MNC: <input type="text" id="mnc" value="10"/>
-        # Trips: <input type="text" id="numTrips" value="2"/>
-        Slide Size (ms): <input type="text" id="slideSize" value="500"/>
-        Velocity (km/h): <input type="text" id="velocity" value="1200"/>
-        <button type="button" id="startButton">start</button>
-        <button type="button" id="stopButton">stop</button>
-    </div>
-    <div id="messagesList"></div>
+            <li>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                Traffic Simulator Input Form
+                            </div>
+                            <div class="panel-body">
+                                <div class="row">
+                                    <div class="col-lg-8">
+                                        <form role="form" class="form-horizontal">
+
+                                            <div class="form-group">
+                                                <label for="mcc" class="col-sm-6 control-label">MCC</label>
+                                                <div class="col-sm-6">
+                                                    <input id="mcc" class="form-control" placeholder="Mobile Country Code" value="206">
+                                                </div>
+
+
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="mnc" class="col-sm-6 control-label">MNC</label>
+                                                <div class="col-sm-6">
+                                                    <input id="mnc" class="form-control" placeholder="Mobile Netwok Code" value="10">
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="numTrips" class="col-sm-6 control-label">#Trips</label>
+                                                <div class="col-sm-6">
+                                                    <input id="numTrips" class="form-control" value="2">
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="slideSize" class="col-sm-6 control-label">Slide (ms)</label>
+                                                <div class="col-sm-6">
+                                                    <input id="slideSize" class="form-control" value="500">
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="velocity" class="col-sm-6 control-label">Speed (km/h)</label>
+                                                <div class="col-sm-6">
+                                                    <input id="velocity" class="form-control" value="1200">
+                                                </div>
+                                            </div>
+
+
+                                            <div class="form-group">
+                                                <div class="col-sm-4">
+                                                    <button type="button" id="startButton" class="btn btn-default">start</button>
+                                                </div>
+                                                <div class="col-sm-4">
+                                                    <button type="button" id="stopButton" class="btn btn-default">stop</button>
+                                                </div>
+                                            </div>
+
+
+
+
+
+
+
+
+
+                                            <!--
+
+                                            <div class="form-group">
+                                                <label>MNC</label>
+                                                <input id="mnc" class="form-control" placeholder="Mobile Network Code">
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label># Trips</label>
+                                                <input id="numTrips" class="form-control" placeholder="Number of trips to simulate">
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label>Slide Size</label>
+                                                <input id="slideSize" class="form-control" placeholder="Slide size in milliseconds">
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label>Velocity</label>
+                                                <input id="velocity" class="form-control" placeholder="Velocity in km/h">
+                                            </div>
+
+                                            <button type="button" id="startButton" class="btn btn-default">start</button>
+                                            <button type="button" id="stopButton" class="btn btn-default">stop</button>
+                                            -->
+
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </li>
+
+        </ul>
 </div>
+<!-- /#sidebar-wrapper -->
 
-<script type="text/javascript">
-$(function() {
+    <!-- Page Content -->
+    <div id="page-content-wrapper">
+        <div class="container-fluid">
+
+            <div class="row">
+                <div class="col-lg-12">
+                    <h1>Simple Sidebar</h1>
+                    <p>This template has a responsive menu toggling system. The menu will appear collapsed on smaller screens, and will appear non-collapsed on larger screens. When toggled using the button below, the menu will appear/disappear. On small screens, the page content will be pushed off canvas.</p>
+                    <p>Make sure to keep all page content within the <code>#page-content-wrapper</code>.</p>
+                    <a href="#menu-toggle" class="btn btn-default" id="menu-toggle">Toggle Menu</a>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-12">
+
+                    <h4>Celltowers</h4>
+
+                    <ul id="socketStatus"></ul>
+                    <br/>
+
+                    <div id="messagesList"></div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /#page-content-wrapper -->
+
+</div>
+<!-- /#wrapper -->
+
+<!-- Menu Toggle Script -->
+<script>
+$("#menu-toggle").click(function(e) {
+    e.preventDefault();
+    $("#wrapper").toggleClass("toggled");
+});
+
+// $(function() {
 
 var url = "@routes.TrafficSimulator.simulatorSocket.webSocketURL()";
 var webSocket = new WebSocket(url);
@@ -71,7 +206,7 @@ $('#stopButton').click(function() {
     stopSimulator();
 })
 
-})
+// })
 </script>
 
 }
