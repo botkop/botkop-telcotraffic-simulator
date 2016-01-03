@@ -16,7 +16,7 @@ class SubscriberSpec extends FlatSpec with Matchers with LazyLogging {
         one.lastName should be ("Parenteau")
     }
 
-    "Subscriber" should "return 5 random subscribers" in new WithApplication {
+    "Subscriber" should "return 5 getRandom subscribers" in new WithApplication {
         val five = Subscriber.random(5)
         five.length should be (5)
     }

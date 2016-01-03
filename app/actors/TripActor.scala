@@ -23,7 +23,7 @@ class TripActor(trip: Trip, slideSize: Time, broker: ActorRef) extends Actor wit
 
     def endTrip(): Unit = {
         log.debug(s"[${trip.subscriber.id}] route end reached: $routeDistance")
-        self ! PoisonPill
+        context.stop(self)
     }
 
     def continueTrip(currentDistance: Length = Meters(0.0)): Unit =  {

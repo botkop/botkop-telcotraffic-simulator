@@ -49,7 +49,7 @@ class TrafficSupervisor(mcc: Int, mnc: Int, numTrips: Int, slideSize: Time, velo
 
     def stopTraffic(): Unit = {
         context.children.foreach(_ ! StopTrip)
-        self ! PoisonPill
+        context.stop(self)
     }
 
     override def receive = {

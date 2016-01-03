@@ -1,11 +1,10 @@
 package actors
 
-import akka.actor.{Actor, ActorLogging, ActorRef, PoisonPill}
+import akka.actor.{Actor, ActorLogging, ActorRef}
 import model.{Celltower, LocationEvent}
 
-import scala.concurrent.duration.FiniteDuration
-
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.FiniteDuration
 
 class CelltowerActor(celltower: Celltower,
                      frequency: FiniteDuration,
@@ -20,7 +19,7 @@ class CelltowerActor(celltower: Celltower,
             context.system.scheduler.scheduleOnce(frequency, self, CelltowerGo)
 
         case CelltowerStop =>
-            self ! PoisonPill
+            context.stop(self)
     }
 
     def generateRandomLocationEvent(): LocationEvent = {
