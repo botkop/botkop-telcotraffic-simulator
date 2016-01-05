@@ -21,6 +21,10 @@ class TrafficSimulator(broker: MessageBroker) extends Actor with ActorLogging {
     }
 
     def startSimulation(mcc: Int, mnc: Int, numTrips: Int, slide: Time, velocity: Velocity) = {
+
+        // stop running simulation before starting a new one
+        stopSimulation()
+
         for (i <- 1 to numTrips) {
             val trip = makeTrip(mcc, mnc, velocity)
             val handler = context.actorOf(TripHandler.props(mcc, mnc, slide, broker))
