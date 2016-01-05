@@ -16,6 +16,9 @@ val scalaTest = "org.scalatest" % "scalatest_2.11" % "2.2.4" % "test"
 val akkaTestKit = "com.typesafe.akka" % "akka-testkit_2.11" % "2.4.1" % "test"
 val akkaLog = "com.typesafe.akka" % "akka-slf4j_2.11" % "2.4.1" % "test"
 
+val kafkaClient = "org.apache.kafka" % "kafka-clients" % "0.8.2.2"
+
+
 libraryDependencies ++= Seq(
     jdbc,
     cache,
@@ -23,6 +26,7 @@ libraryDependencies ++= Seq(
     squants,
     "com.typesafe.play" %% "anorm" % "2.4.0",
     "org.xerial" % "sqlite-jdbc" % "3.8.10.1",
+    kafkaClient,
     logging, logback,
     specs2 % Test, scalaTest,
     akkaTestKit, akkaLog

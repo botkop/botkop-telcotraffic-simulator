@@ -1,6 +1,8 @@
 package geo
 
-case class LatLng(lat: Double, lng: Double) {
+import play.api.libs.json.Json
+
+case class LatLng(lat: Double = 0.0, lng: Double = 0.0) {
 
     val EarthRadiusMeters = 6378137 // meters
 
@@ -18,10 +20,9 @@ case class LatLng(lat: Double, lng: Double) {
         EarthRadiusMeters * c
     }
 
-    def toJson: String = s"""{"lat":$lat,"lng":$lng}"""
-
 }
 
 object LatLng {
-    def apply(): LatLng = LatLng(0.0, 0.0)
+    implicit val requestWrites = Json.writes[LatLng]
+    implicit val requestReads = Json.reads[LatLng]
 }

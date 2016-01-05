@@ -1,4 +1,4 @@
-package model
+package traffic.model
 
 import com.typesafe.scalalogging.LazyLogging
 import org.scalatest.{FlatSpec, Matchers}

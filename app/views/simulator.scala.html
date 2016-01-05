@@ -119,7 +119,7 @@ $("#menu-toggle").click(function(e) {
 
 // $(function() {
 
-var url = "@routes.TrafficSimulator.simulatorSocket.webSocketURL()";
+var url = "@routes.Application.simulatorSocket.webSocketURL()";
 var webSocket = new WebSocket(url);
 
 webSocket.onopen = function(msg) {
@@ -146,17 +146,15 @@ function startSimulator() {
     velocity = parseInt($('#velocity').val());
     slideSize = parseInt($('#slideSize').val());
 
-    var message = { "action": "start", "mcc": mcc, "mnc": mnc, "numTrips": numTrips, "velocity": velocity, "slideSize": slideSize };
+    var message = { "mcc": mcc, "mnc": mnc, "numTrips": numTrips, "velocity": velocity, "slide": slideSize };
     var json = JSON.stringify(message);
     console.log(json);
     webSocket.send(json);
 };
 
 function stopSimulator() {
-    var message = { "action": "stop" };
-    var json = JSON.stringify(message);
-    console.log(json);
-    webSocket.send(json);
+    var message = "stop";
+    webSocket.send(message);
 }
 
 $('#startButton').click(function() {

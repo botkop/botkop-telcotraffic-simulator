@@ -12,10 +12,10 @@ case class Polyline(path: List[LatLng], polyline: String) {
         dist
     }
 
-    def pointAtDistance(metres: Double): LatLng = {
-        if (metres == 0) return path.head
-        if (metres < 0) return null
-        if (path.size < 2) return null
+    def pointAtDistance(metres: Double): Option[LatLng] = {
+        if (metres == 0) return Some(path.head)
+        if (metres < 0) return None
+        if (path.size < 2) return None
 
         var dist = 0.0
         var oldDist = 0.0
@@ -28,14 +28,15 @@ case class Polyline(path: List[LatLng], polyline: String) {
         }
 
         if (dist < metres) {
-            return null
+            return Some(path.last)
         }
 
         val p1 = path(i-2)
         val p2 = path(i-1)
         val m = (metres-oldDist)/(dist-oldDist)
 
-        LatLng( p1.lat + (p2.lat-p1.lat)*m, p1.lng + (p2.lng-p1.lng)*m)
+        val location = LatLng( p1.lat + (p2.lat-p1.lat)*m, p1.lng + (p2.lng-p1.lng)*m)
+        Some(location)
     }
 }
 

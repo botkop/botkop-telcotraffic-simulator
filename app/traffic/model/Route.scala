@@ -1,9 +1,10 @@
-package model
+package traffic.model
 
 import com.typesafe.scalalogging.LazyLogging
 import geo.{LatLng, Polyline}
 import play.api.Play.current
 import play.api.libs.ws._
+import squants.motion.Distance
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Await, Future}
@@ -15,7 +16,10 @@ case class Route(polyline: Polyline) {
     def from: LatLng = polyline.path.head
     def to: LatLng = polyline.path.last
     def distance = polyline.distance()
-    def position(distance: Double) = polyline.pointAtDistance(distance)
+    def location(distance: Distance) = {
+        val m: Double = distance.toMeters
+        polyline.pointAtDistance(m)
+    }
 }
 
 object Route extends LazyLogging {

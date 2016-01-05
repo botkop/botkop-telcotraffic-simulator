@@ -1,9 +1,10 @@
-package model
+package traffic.model
 
 import anorm._
 import anorm.SqlParser._
 import play.api.db.DB
 import play.api.Play.current
+import play.api.libs.json.Json
 import scala.language.postfixOps
 
 case class Subscriber(
@@ -20,6 +21,10 @@ case class Subscriber(
 
 
 object Subscriber {
+
+    implicit val requestWrites = Json.writes[Subscriber]
+    implicit val requestReads = Json.reads[Subscriber]
+
     val subscriberRowParser: RowParser[Subscriber] = {
         int("phone_ids.id") ~
             str("phone_ids.imsi") ~

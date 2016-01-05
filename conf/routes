@@ -2,10 +2,13 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-# Home page
-GET     /                          controllers.Application.index
-GET     /simulator                 controllers.TrafficSimulator.simulatorPage
-GET     /simulator/socket          controllers.TrafficSimulator.simulatorSocket
+# REST interface
+POST     /simulator/rest/start            controllers.Application.startSimulator
+POST     /simulator/rest/stop             controllers.Application.stopSimulator
+
+# HTML interface
+GET      /simulator                       controllers.Application.simulatorPage
+GET      /simulator/socket                controllers.Application.simulatorSocket
 
 # Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
+GET      /assets/*file                    controllers.Assets.versioned(path="/public", file: Asset)
