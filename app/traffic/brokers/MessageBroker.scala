@@ -1,6 +1,10 @@
 package traffic.brokers
 
+import play.api.Configuration
+
 trait MessageBroker {
-    def send(message: String)
+    def send(topic: String, message: String)
+
+    def configure(config: Configuration)
 }
 

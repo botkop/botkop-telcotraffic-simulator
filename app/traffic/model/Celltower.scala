@@ -77,17 +77,39 @@ object Celltower extends LazyLogging {
         var minDist = Double.MaxValue
         var minCelltower: Celltower = null
 
-        all.foreach {
-            case ct: Celltower =>
-                val dist = location.distanceFrom(ct.location)
-                if (dist < minDist) {
-                    minDist = dist
-                    minCelltower = ct
-                }
+
+        all.foreach { ct: Celltower =>
+            val dist = location.distanceFrom(ct.location)
+            if (dist < minDist) {
+                minDist = dist
+                minCelltower = ct
+            }
+
         }
 
         minCelltower
     }
 
+}
+
+case class CelltowerCache(mcc: Int, mnc: Int) {
+    val cache = Celltower.getAll(mcc, mnc)
+
+    def getNearest(location: LatLng): Celltower = {
+        var minDist = Double.MaxValue
+        var minCelltower: Celltower = null
+
+        cache.foreach { ct: Celltower =>
+            val dist = location.distanceFrom(ct.location)
+            if (dist < minDist) {
+                minDist = dist
+                minCelltower = ct
+            }
+
+        }
+        minCelltower
+    }
+
 
 }
+

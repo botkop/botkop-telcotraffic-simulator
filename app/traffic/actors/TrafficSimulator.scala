@@ -25,6 +25,7 @@ class TrafficSimulator(broker: MessageBroker) extends Actor with ActorLogging {
         // stop running simulation before starting a new one
         stopSimulation()
 
+        log.info("starting simulation")
         for (i <- 1 to numTrips) {
             val trip = makeTrip(mcc, mnc, velocity)
             val handler = context.actorOf(TripHandler.props(mcc, mnc, slide, broker))
@@ -33,13 +34,12 @@ class TrafficSimulator(broker: MessageBroker) extends Actor with ActorLogging {
     }
 
     def stopSimulation() = {
-        log.info("stopping all children")
+        log.info("stopping simulation")
         context.children.foreach{context.stop}
     }
 
     override def receive: Receive = {
         case StartSimulation(r) =>
-            log.info("starting simulation")
             startSimulation(r.mcc, r.mnc, r.numTrips, Milliseconds(r.slide), KilometersPerHour(r.velocity))
         case StopSimulation =>
             stopSimulation()

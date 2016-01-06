@@ -3,15 +3,20 @@ package traffic.brokers
 import java.util.Properties
 
 import org.apache.kafka.clients.producer.{ProducerRecord, KafkaProducer}
+import play.api.Configuration
 
 class KafkaBroker extends MessageBroker {
 
-    val props = new Properties()
+    var producer: KafkaProducer[String, String] = _
 
-    props.put("metadata.broker.list", "broker1:9092,broker2:9092")
-    props.put("serializer.class", "kafka.serializer.StringEncoder")
+    override def send(topic: String, message: String): Unit = producer.send(new ProducerRecord[String, String](topic, message))
 
-    val producer = new KafkaProducer[String, String](props)
+    override def configure(config: Configuration) = {
+        val props = new Properties()
+        config.keys.foreach { k =>
+            props.put(k, config.getString(k).get)
+        }
+        producer = new KafkaProducer[String, String](props)
+    }
 
-    override def send(message: String): Unit = producer.send(new ProducerRecord[String, String](null, message))
 }

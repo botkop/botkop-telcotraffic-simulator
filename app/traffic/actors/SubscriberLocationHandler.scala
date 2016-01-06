@@ -17,7 +17,7 @@ class SubscriberLocationHandler(mcc: Int, mnc: Int, broker: MessageBroker) exten
     def handleMessage(trip: Trip) = {
         val subscriberLocation = SubscriberLocation.extract(trip)
         val message = Json.stringify(Json.toJson(subscriberLocation))
-        broker.send(message)
+        broker.send("subscriber-topic", message)
     }
 
 }

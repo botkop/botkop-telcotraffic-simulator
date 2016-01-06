@@ -5,8 +5,8 @@ curl -X POST -i -H "Content-type: application/json" -X POST http://localhost:900
 "mcc": 206,
 "mnc": 10,
 "numTrips": 2,
-"velocity": 12000,
-"slide": 1000
+"velocity": 120,
+"slide": 500
 }
 '
 
