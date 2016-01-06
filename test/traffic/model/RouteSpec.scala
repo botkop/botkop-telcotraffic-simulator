@@ -4,6 +4,7 @@ import com.typesafe.scalalogging.LazyLogging
 import geo.LatLng
 import org.scalatest.{FlatSpec, Matchers}
 import play.api.test.WithApplication
+import traffic.FakeTestApp
 
 /*
 ignore this test to avoid access to google all the time
@@ -11,7 +12,7 @@ ignore this test to avoid access to google all the time
 // @Ignore
 class RouteSpec extends FlatSpec with Matchers with LazyLogging {
 
-    "A Route" should "get the directions from Google" in new WithApplication {
+    "A Route" should "get the directions from Google" in new WithApplication(FakeTestApp()) {
 
         val from = LatLng(64.1533981, -21.79994)
         val to = LatLng(63.96103710000001, -21.2614058)

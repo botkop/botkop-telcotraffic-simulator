@@ -3,7 +3,6 @@ package traffic.actors
 import akka.actor._
 import akka.testkit.{ImplicitSender, TestKit}
 import com.typesafe.scalalogging.LazyLogging
-import geo.LatLng
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import play.api.Configuration
 import play.api.libs.json.{JsValue, Json}
@@ -11,6 +10,7 @@ import play.api.test.WithApplication
 import squants.Velocity
 import squants.motion.KilometersPerHour
 import squants.time.Milliseconds
+import traffic.FakeTestApp
 import traffic.brokers.MessageBroker
 import traffic.model._
 
@@ -24,20 +24,25 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
 
     // TODO: make an actor per topic
     class ActorBroker(system: ActorSystem) extends MessageBroker {
+
         object Bubble {
             def props = Props(new Bubble)
+
             class Bubble extends Actor {
                 override def receive = {
                     case msg => sender ! msg
                 }
             }
+
         }
+
         val actor: ActorRef = system.actorOf(Bubble.props)
+
         override def send(topic: String, message: String): Unit = {
             actor ! message
         }
 
-        override def configure(config: Configuration): Unit = { }
+        override def configure(config: Configuration): Unit = {}
     }
 
     def makeTrip(): Trip = {
@@ -66,7 +71,7 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
 
     "A TripHandler" must {
 
-        "emit subscriber and celltower messages along the route" in new WithApplication() {
+        "emit subscriber and celltower messages along the route" in new WithApplication(FakeTestApp()) {
 
             val trip = makeTrip()
             val mcc = 206

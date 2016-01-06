@@ -4,6 +4,7 @@ import org.junit.runner._
 
 import play.api.test._
 import play.api.test.Helpers._
+import traffic.FakeTestApp
 
 /**
  * Add your spec here.
@@ -15,7 +16,7 @@ class ApplicationSpec extends Specification {
 
   "Application" should {
 
-    "send 404 on a bad request" in new WithApplication{
+    "send 404 on a bad request" in new WithApplication(FakeTestApp()){
       route(FakeRequest(GET, "/boum")) must beSome.which (status(_) == NOT_FOUND)
     }
 
