@@ -3,9 +3,10 @@ package traffic.actors
 import akka.actor._
 import akka.testkit.{ImplicitSender, TestKit}
 import com.typesafe.scalalogging.LazyLogging
+import geo.LatLng
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import play.api.Configuration
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.Json
 import play.api.test.WithApplication
 import squants.Velocity
 import squants.motion.KilometersPerHour
@@ -22,27 +23,27 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
 
     import TripHandler._
 
-    // TODO: make an actor per topic
-    class ActorBroker(system: ActorSystem) extends MessageBroker {
+    class ActorBroker(system: ActorSystem, useTopic: String) extends MessageBroker {
 
         object Bubble {
             def props = Props(new Bubble)
-
             class Bubble extends Actor {
                 override def receive = {
                     case msg => sender ! msg
                 }
             }
-
         }
 
         val actor: ActorRef = system.actorOf(Bubble.props)
 
         override def send(topic: String, message: String): Unit = {
-            actor ! message
+            // filter per topic
+            if  (useTopic == topic) {
+                actor ! message
+            }
         }
 
-        override def configure(config: Configuration): Unit = {}
+        override def configure(config: Configuration): Unit = {} // no config required
     }
 
     def makeTrip(): Trip = {
@@ -71,51 +72,45 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
 
     "A TripHandler" must {
 
-        "emit subscriber and celltower messages along the route" in new WithApplication(FakeTestApp()) {
+        val trip = makeTrip()
+        val mcc = 206
+        val mnc = 10
+        val slide = Milliseconds(250)
 
-            val trip = makeTrip()
-            val mcc = 206
-            val mnc = 10
-            val slide = Milliseconds(250)
+        "emit celltower messages along the route" in new WithApplication(FakeTestApp()) {
 
-            val broker = new ActorBroker(system)
+            val broker = new ActorBroker(system, "celltower-topic")
             val tripHandler = system.actorOf(TripHandler.props(mcc, mnc, slide, broker))
-
             tripHandler ! ContinueTrip(trip)
             val seq: Seq[String] = receiveN(8, 2000.millis).asInstanceOf[Seq[String]]
-            // logger.info(seq.toString())
+            tripHandler ! PoisonPill
 
-            var subList = List[SubscriberLocation]()
-            var cellList = List[Celltower]()
+            logger.info(seq.toString())
 
-            // sequence contains both celltower and subscriber locations
-            // parse and store them in separate lists
-            seq.foreach { r =>
-                val p: JsValue = Json.parse(r)
-                // is it a subscriber location ?
-                p.asOpt[SubscriberLocation] match {
-                    case slo: Some[SubscriberLocation] =>
-                        subList = subList :+ slo.get
-                    case None =>
-                        // is it a celltower ?
-                        p.asOpt[Celltower] match {
-                            case cto: Some[Celltower] =>
-                                cellList = cellList :+ cto.get
-                            case None =>
-                                logger.error(s"unknown message received: $r")
-                        }
-                }
+            val cl: Seq[Celltower] = seq flatMap {
+                Json.parse(_).asOpt[Celltower]
             }
 
-            // TODO: make this a better test for actors per topic
-
-            logger.info(subList.toString)
-            // subList.length should be >= 4
-            // subList.last.location should be (LatLng(38.505068301565004,-120.20172783007898))
-
-            logger.info(cellList.toString)
-            // cellList.length should be >= 2
+            cl.last should be (Celltower(206,10,62584,9731,LatLng(48.433702,-4.444959)))
         }
+
+        "emit subscriber messages along the route" in new WithApplication(FakeTestApp()) {
+
+            val broker = new ActorBroker(system, "subscriber-topic")
+            val tripHandler = system.actorOf(TripHandler.props(mcc, mnc, slide, broker))
+            tripHandler ! ContinueTrip(trip)
+            val seq: Seq[String] = receiveN(8, 2000.millis).asInstanceOf[Seq[String]]
+            tripHandler ! PoisonPill
+
+            logger.info(seq.toString())
+
+            val sl: Seq[SubscriberLocation] = seq flatMap {
+                Json.parse(_).asOpt[SubscriberLocation]
+            }
+
+            sl.last.location should be (LatLng(38.50579234464571,-120.2019746629474))
+        }
+
     }
 
 }
