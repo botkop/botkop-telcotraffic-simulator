@@ -46,7 +46,7 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
         override def configure(config: Configuration): Unit = {} // no config required
     }
 
-    def makeTrip(): Trip = {
+    def makeTrip(kmh: Double = 1200): Trip = {
         val route = Route("_p~iF~ps|U_ulLnnqC_mqNvxq`@")
         val sub = Subscriber(
             id = 1,
@@ -60,7 +60,7 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
             zip = "zip",
             country = "country"
         )
-        val velocity: Velocity = KilometersPerHour(1200)
+        val velocity: Velocity = KilometersPerHour(kmh)
         Trip(sub, route, velocity)
     }
 
@@ -72,13 +72,13 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
 
     "A TripHandler" must {
 
-        val trip = makeTrip()
         val mcc = 206
         val mnc = 10
         val slide = Milliseconds(250)
 
         "emit celltower messages along the route" in new WithApplication(FakeTestApp()) {
 
+            val trip = makeTrip()
             val broker = new ActorBroker(system, "celltower-topic")
             val tripHandler = system.actorOf(TripHandler.props(mcc, mnc, slide, broker))
             tripHandler ! ContinueTrip(trip)
@@ -87,15 +87,14 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
 
             logger.info(seq.toString())
 
-            val cl: Seq[Celltower] = seq flatMap {
-                Json.parse(_).asOpt[Celltower]
-            }
+            val cl: Seq[Celltower] = seq flatMap { Json.parse(_).asOpt[Celltower] }
 
             cl.last should be (Celltower(206,10,62584,9731,LatLng(48.433702,-4.444959)))
         }
 
         "emit subscriber messages along the route" in new WithApplication(FakeTestApp()) {
 
+            val trip = makeTrip()
             val broker = new ActorBroker(system, "subscriber-topic")
             val tripHandler = system.actorOf(TripHandler.props(mcc, mnc, slide, broker))
             tripHandler ! ContinueTrip(trip)
@@ -104,9 +103,24 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
 
             logger.info(seq.toString())
 
-            val sl: Seq[SubscriberLocation] = seq flatMap {
-                Json.parse(_).asOpt[SubscriberLocation]
-            }
+            val sl: Seq[SubscriberLocation] = seq flatMap { Json.parse(_).asOpt[SubscriberLocation] }
+
+            sl.last.location should be (LatLng(38.50579234464571,-120.2019746629474))
+        }
+
+        "allow to control the speed factor" in new WithApplication(FakeTestApp()) {
+
+            val trip = makeTrip(120)
+            val broker = new ActorBroker(system, "subscriber-topic")
+            val tripHandler = system.actorOf(TripHandler.props(mcc, mnc, slide, broker))
+            tripHandler ! SetSpeedFactor(10)
+            tripHandler ! ContinueTrip(trip)
+            val seq: Seq[String] = receiveN(8, 2000.millis).asInstanceOf[Seq[String]]
+            tripHandler ! PoisonPill
+
+            logger.info(seq.toString())
+
+            val sl: Seq[SubscriberLocation] = seq flatMap { Json.parse(_).asOpt[SubscriberLocation] }
 
             sl.last.location should be (LatLng(38.50579234464571,-120.2019746629474))
         }
