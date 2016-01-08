@@ -55,10 +55,26 @@
                                             <div class="form-group">
                                                 <label for="velocity" class="col-sm-6 control-label">Speed (km/h)</label>
                                                 <div class="col-sm-6">
-                                                    <input id="velocity" class="form-control" value="1200">
+                                                    <input id="velocity" class="form-control" value="120">
                                                 </div>
                                             </div>
 
+
+
+                                            <div class="form-group">
+                                                <label for="speedFactor" class="col-sm-6 control-label">Speed Factor</label>
+                                                <div class="col-sm-6">
+                                                    <select name="speed" id="speedFactor">
+                                                        <option>0</option>
+                                                        <option>0.1</option>
+                                                        <option selected="selected">1</option>
+                                                        <option>5</option>
+                                                        <option>10</option>
+                                                        <option>100</option>
+                                                        <option>1000</option>
+                                                    </select>
+                                                </div>
+                                            </div>
 
                                             <div class="form-group">
                                                 <div class="col-sm-4">
@@ -68,7 +84,6 @@
                                                     <button type="button" id="stopButton" class="btn btn-default">stop</button>
                                                 </div>
                                             </div>
-
 
                                         </form>
                                     </div>
@@ -145,16 +160,24 @@ function startSimulator() {
     numTrips = parseInt($('#numTrips').val());
     velocity = parseInt($('#velocity').val());
     slideSize = parseInt($('#slideSize').val());
+    speedFactor = parseFloat($('#speedFactor').val());
 
-    var message = { "mcc": mcc, "mnc": mnc, "numTrips": numTrips, "velocity": velocity, "slide": slideSize };
+    var request = { mcc: mcc, mnc: mnc, numTrips: numTrips, velocity: velocity, slide: slideSize, speedFactor: speedFactor };
+    var message = { action: "start", request: request };
     var json = JSON.stringify(message);
-    console.log(json);
     webSocket.send(json);
 };
 
 function stopSimulator() {
-    var message = "stop";
-    webSocket.send(message);
+    var message = { action: "stop" };
+    webSocket.send(JSON.stringify(message));
+}
+
+function setSpeedFactor() {
+    var sf = parseFloat( $('#speedFactor').val() );
+    console.log(sf);
+    var message = {action: "setSpeedFactor", speedFactor: sf };
+    webSocket.send(JSON.stringify(message));
 }
 
 $('#startButton').click(function() {
@@ -164,6 +187,11 @@ $('#startButton').click(function() {
 $('#stopButton').click(function() {
     stopSimulator();
 })
+
+$('#speedFactor').change(function() {
+    setSpeedFactor();
+})
+
 
 // })
 </script>

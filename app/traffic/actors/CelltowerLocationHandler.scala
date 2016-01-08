@@ -8,6 +8,7 @@ import traffic.brokers.MessageBroker
 
 class CelltowerLocationHandler(mcc: Int, mnc: Int, broker: MessageBroker) extends Actor with ActorLogging {
 
+    val topicName = "celltower-topic"
     val celltowerCache = CelltowerCache(mcc, mnc)
 
     override def receive = {
@@ -19,7 +20,7 @@ class CelltowerLocationHandler(mcc: Int, mnc: Int, broker: MessageBroker) extend
         trip.currentLocation match {
             case Some(location) =>
                 val celltower: Celltower = celltowerCache.getNearest(location)
-                broker.send("celltower-topic", Json.stringify(Json.toJson(celltower)))
+                broker.send(topicName, Json.stringify(Json.toJson(celltower)))
             case None =>
                 log.error("unable to obtain location")
         }

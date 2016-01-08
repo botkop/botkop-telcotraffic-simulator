@@ -58,9 +58,7 @@ class TripHandler(mcc: Int, mnc: Int, slide: Time, broker: MessageBroker) extend
 object TripHandler {
 
     case class StartTrip(trip: Trip)
-
     case class ContinueTrip(trip: Trip)
-
     case class SetSpeedFactor(factor: Double)
 
     def props (mcc: Int, mnc: Int, slide: Time, broker: MessageBroker): Props = {

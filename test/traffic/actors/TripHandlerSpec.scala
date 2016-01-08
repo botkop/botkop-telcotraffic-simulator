@@ -5,7 +5,6 @@ import akka.testkit.{ImplicitSender, TestKit}
 import com.typesafe.scalalogging.LazyLogging
 import geo.LatLng
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
-import play.api.Configuration
 import play.api.libs.json.Json
 import play.api.test.WithApplication
 import squants.Velocity
@@ -42,8 +41,6 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
                 actor ! message
             }
         }
-
-        override def configure(config: Configuration): Unit = {} // no config required
     }
 
     def makeTrip(kmh: Double = 1200): Trip = {
