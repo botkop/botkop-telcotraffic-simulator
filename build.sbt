@@ -32,6 +32,9 @@ libraryDependencies ++= Seq(
     akkaTestKit, akkaLog
 )
 
+libraryDependencies += "org.scalanlp" % "breeze_2.11" % "0.11.2"
+libraryDependencies += "org.scalanlp" % "breeze-natives_2.11" % "0.11.2"
+
 
 resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
 // resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"

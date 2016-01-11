@@ -3,9 +3,7 @@
 # ~~~~
 
 # REST interface
-POST     /simulator/rest/start            controllers.Application.startSimulator
-POST     /simulator/rest/stop             controllers.Application.stopSimulator
-POST     /simulator/rest/speed            controllers.Application.setSpeedFactor
+POST     /simulator/rest/request          controllers.Application.restRequest
 
 # HTML interface
 GET      /simulator                       controllers.Application.simulatorPage

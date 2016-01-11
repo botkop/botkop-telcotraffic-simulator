@@ -2,14 +2,13 @@ package controllers
 
 import akka.actor.ActorSystem
 import com.typesafe.scalalogging.LazyLogging
+import play.api.Configuration
 import play.api.Play.current
-import play.api.libs.json.{JsError, Json}
+import play.api.libs.json.{JsError, JsResultException, Json}
 import play.api.mvc._
-import traffic.actors.TrafficSimulator.{StartSimulation, StopSimulation}
-import traffic.actors.TripHandler.SetSpeedFactor
 import traffic.actors.{SimulatorSocketHandler, TrafficSimulator}
 import traffic.brokers.MessageBroker
-import traffic.model.SimulatorRequest
+import traffic.model.JsonMessageParser
 
 class Application extends Controller with LazyLogging {
 
@@ -19,59 +18,48 @@ class Application extends Controller with LazyLogging {
 
     val trafficSimulator = system.actorOf(TrafficSimulator.props(broker))
 
-    def startSimulator = Action(BodyParsers.parse.json) { request =>
-        val r = request.body.validate[SimulatorRequest]
-        r.fold(
-            errors => {
-                BadRequest(Json.obj("status" -> "OK", "message" -> JsError.toJson(errors)))
-            },
-            simulatorRequest => {
-                trafficSimulator ! StartSimulation(simulatorRequest)
+    val messageInterpreter = JsonMessageParser(trafficSimulator)
 
-                Ok(Json.obj("status" -> "OK"))
-            }
-        )
-    }
-
-    def stopSimulator = Action { request =>
-        trafficSimulator ! StopSimulation
-        Ok(Json.obj("status" -> "OK"))
-    }
-
-    def setSpeedFactor() = Action(BodyParsers.parse.json) { request =>
-
-        object SpeedRequest {
-            case class SpeedRequest(speedFactor: Double)
-            implicit val r = Json.reads[SpeedRequest]
+    /**
+      * handle REST requests
+      * @return
+      */
+    def restRequest = Action(BodyParsers.parse.json) { request =>
+        try {
+            messageInterpreter.interpreteJson(request.body)
+            Ok(Json.obj("status" -> "OK"))
+        } catch {
+            case jre: JsResultException =>
+                BadRequest(Json.obj("status" -> "OK", "message" -> JsError.toJson(jre.errors)))
+            case e: Exception =>
+                BadRequest(Json.obj("status" -> "OK", "message" -> e.getMessage))
         }
-        import SpeedRequest._
-
-        val r = request.body.validate[SpeedRequest]
-        r.fold (
-            errors => {
-                BadRequest(Json.obj("status" -> "OK", "message" -> JsError.toJson(errors)))
-            },
-            speedRequest => {
-                val sf = speedRequest.speedFactor
-                logger.info("setting speed factor to: {}", sf.toString)
-                trafficSimulator ! SetSpeedFactor(sf)
-                Ok(Json.obj("status" -> "OK"))
-            }
-        )
     }
 
+    /**
+      * Handle HTTP requests
+      * @return
+      */
     def simulatorPage() = Action { implicit request =>
         Ok(views.html.simulator(request))
     }
 
+    /**
+      * Socket for HTTP clients
+      * @return
+      */
     def simulatorSocket() = WebSocket.acceptWithActor[String, String] { req => out =>
         SimulatorSocketHandler.props(out, trafficSimulator)
     }
 
+    /**
+      * initialize message broker
+      * @return
+      */
     def initBroker: MessageBroker = {
         val conf = current.configuration
         val brokerName: String = conf.getString("messageBroker").get
-        val brokerConfig = conf.getConfig(brokerName).get
+        val brokerConfig: Configuration = conf.getConfig(brokerName).get
         val clazzName = brokerConfig.getString("class").get
 
         val broker = Class.forName(clazzName).newInstance.asInstanceOf[MessageBroker]
