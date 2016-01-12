@@ -74,9 +74,7 @@ object Celltower extends LazyLogging {
 
 }
 
-case class CelltowerCache(mcc: Int, mnc: Int) {
-    val cache = Celltower.getAll(mcc, mnc)
-
+case class CelltowerCache(cache: List[Celltower]) {
     def getNearest(location: LatLng): Celltower = {
         var minDist = Double.MaxValue
         var minCelltower: Celltower = null
@@ -91,6 +89,12 @@ case class CelltowerCache(mcc: Int, mnc: Int) {
         }
         minCelltower
     }
+}
 
+object CelltowerCache {
+    def apply(mcc: Int, mnc: Int): CelltowerCache = {
+        val cache: List[Celltower] = Celltower.getAll(mcc, mnc)
+        CelltowerCache(cache)
+    }
 }
 
