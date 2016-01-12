@@ -1,26 +1,23 @@
 package traffic.actors
 
-import java.util.UUID
-
-import akka.actor.{Actor, ActorLogging, Props}
+import akka.actor._
 import breeze.stats.distributions.Gaussian
 import play.api.Configuration
 import play.api.Play.current
-import play.api.libs.json.Json
+import traffic.actors.CelltowerEventHandler.EmitEvent
 import traffic.brokers.MessageBroker
 import traffic.model.{Celltower, CelltowerCache, Trip}
 
 import scala.collection.JavaConversions._
 
+case class MetricTemplate(name: String, dist: Gaussian)
+case class CelltowerTemplate(name: String, metrics: List[MetricTemplate])
+
 class CelltowerLocationHandler(mcc: Int, mnc: Int, broker: MessageBroker) extends Actor with ActorLogging {
 
     import CelltowerLocationHandler._
 
-    val topicName = "celltower-topic"
     val celltowerCache = CelltowerCache(mcc, mnc)
-
-    case class MetricTemplate(name: String, dist: Gaussian)
-    case class CelltowerTemplate(name: String, metrics: List[MetricTemplate])
 
     val templatesConfig = current.configuration.getConfigList("celltower-templates").get
 
@@ -35,46 +32,36 @@ class CelltowerLocationHandler(mcc: Int, mnc: Int, broker: MessageBroker) extend
             std = mc.getDouble("std").get;
             metricTemplate = MetricTemplate(metricName, Gaussian(mean, std))
         ) yield metricTemplate
-
         CelltowerTemplate(templateName, metrics.toList)
     }.toList
 
     log.debug("read the following celltower templates: {}", templates.toString)
 
-    case class CelltowerEvent(celltower: Celltower, bearerId: String, metrics: Map[String, Double])
-    object CelltowerEvent {
-        implicit val w = Json.writes[CelltowerEvent]
-    }
+    var celltowerActorMap = Map.empty[Int, ActorRef]
+
+    def getCelltowerActor(celltower: Celltower) = celltowerActorMap.getOrElse(celltower.cell, {
+        val templateIdx = celltower.cell % templates.length
+        val template = templates(templateIdx)
+        val actor = context actorOf Props(new CelltowerEventHandler(celltower, template, broker))
+        celltowerActorMap += celltower.cell -> actor
+        context watch actor
+        actor
+    })
 
     override def receive = {
         case HandleCelltowerLocation(trip) =>
             handleCelltowerLocation(trip)
-    }
-
-    def buildEvent(celltower: Celltower, bearerId: UUID): String = {
-
-        // which template to use for this celltower
-        // template should always be the same for the same celltower
-        // here we are using cell id mod (templates.length)
-        // which avoids the instantiation of an actor/object for each celltower
-
-        val templateIdx = celltower.cell % templates.length
-
-        val templateMetrics = templates(templateIdx).metrics
-
-        val metrics = templateMetrics.map { mt =>
-            (mt.name, mt.dist.sample())
-        }.toMap
-
-        val celltowerEvent = CelltowerEvent(celltower, bearerId.toString, metrics)
-        Json.stringify(Json.toJson(celltowerEvent))
+        case Terminated(ref) =>
+            // clean up celltowerActorMap
+            celltowerActorMap = celltowerActorMap filterNot { case (_, v) => v == ref }
     }
 
     def handleCelltowerLocation(trip: Trip): Unit = {
         trip.currentLocation match {
             case Some(location) =>
                 val celltower: Celltower = celltowerCache.getNearest(location)
-                broker.send(topicName, buildEvent(celltower, trip.bearerId))
+                val celltowerActor = getCelltowerActor(celltower)
+                celltowerActor ! EmitEvent(trip.bearerId)
             case None =>
                 log.error("unable to obtain location")
         }

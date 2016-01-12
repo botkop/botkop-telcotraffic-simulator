@@ -14,9 +14,7 @@ class Application extends Controller with LazyLogging {
 
     val system = ActorSystem("TrafficSimulatorSystem")
 
-    val broker: MessageBroker = initBroker
-
-    val trafficSimulator = system.actorOf(TrafficSimulator.props(broker))
+    val trafficSimulator = system.actorOf(TrafficSimulator.props())
 
     val messageInterpreter = JsonMessageParser(trafficSimulator)
 
@@ -50,26 +48,6 @@ class Application extends Controller with LazyLogging {
       */
     def simulatorSocket() = WebSocket.acceptWithActor[String, String] { req => out =>
         SimulatorSocketHandler.props(out, trafficSimulator)
-    }
-
-    /**
-      * initialize message broker
-      * @return
-      */
-    def initBroker: MessageBroker = {
-        val conf = current.configuration
-        val brokerName: String = conf.getString("messageBroker").get
-        val brokerConfig: Configuration = conf.getConfig(brokerName).get
-        val clazzName = brokerConfig.getString("class").get
-
-        val broker = Class.forName(clazzName).newInstance.asInstanceOf[MessageBroker]
-
-        brokerConfig.getConfig("properties") match {
-            case Some(properties) =>
-                broker.configure(properties)
-            case _ =>
-        }
-        broker
     }
 
 }
