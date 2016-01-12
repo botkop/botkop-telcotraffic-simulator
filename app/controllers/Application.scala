@@ -14,9 +14,31 @@ class Application extends Controller with LazyLogging {
 
     val system = ActorSystem("TrafficSimulatorSystem")
 
-    val trafficSimulator = system.actorOf(TrafficSimulator.props())
+    val broker = initBroker
+
+    val trafficSimulator = system.actorOf(TrafficSimulator.props(broker))
 
     val messageInterpreter = JsonMessageParser(trafficSimulator)
+
+    /**
+      * initialize message broker
+      * @return
+      */
+    def initBroker: MessageBroker = {
+        val conf = current.configuration
+        val brokerName: String = conf.getString("messageBroker").get
+        val brokerConfig: Configuration = conf.getConfig(brokerName).get
+        val clazzName = brokerConfig.getString("class").get
+
+        val broker = Class.forName(clazzName).newInstance.asInstanceOf[MessageBroker]
+
+        brokerConfig.getConfig("properties") match {
+            case Some(properties) =>
+                broker.configure(properties)
+            case _ =>
+        }
+        broker
+    }
 
     /**
       * handle REST requests

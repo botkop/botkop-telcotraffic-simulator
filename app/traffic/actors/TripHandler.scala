@@ -10,11 +10,11 @@ import traffic.model.Trip
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
-class TripHandler(mcc: Int, mnc: Int, slide: Time) extends Actor with ActorLogging {
+class TripHandler(mcc: Int, mnc: Int, slide: Time, broker: MessageBroker) extends Actor with ActorLogging {
 
     import TripHandler._
 
-    val locationHandler = context.actorOf(LocationHandler.props(mcc, mnc))
+    val locationHandler = context.actorOf(LocationHandler.props(mcc, mnc, broker))
 
     val slideDuration: FiniteDuration = Duration(slide.millis, MILLISECONDS)
 
@@ -61,8 +61,8 @@ object TripHandler {
     case class ContinueTrip(trip: Trip)
     case class SetSpeedFactor(factor: Double)
 
-    def props (mcc: Int, mnc: Int, slide: Time): Props = {
-        Props(new TripHandler(mcc, mnc, slide))
+    def props (mcc: Int, mnc: Int, slide: Time, broker: MessageBroker): Props = {
+        Props(new TripHandler(mcc, mnc, slide, broker))
     }
 }
 

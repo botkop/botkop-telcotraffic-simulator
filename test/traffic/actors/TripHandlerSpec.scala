@@ -84,9 +84,9 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
 
             logger.info(seq.toString())
 
-            val cl: Seq[Celltower] = seq flatMap { Json.parse(_).asOpt[Celltower] }
+            val cl: Seq[CelltowerEvent] = seq flatMap { Json.parse(_).asOpt[CelltowerEvent] }
 
-            cl.last should be (Celltower(206,10,62584,9731,LatLng(48.433702,-4.444959)))
+            cl.last.celltower should be (Celltower(206,10,62584,9731,LatLng(48.433702,-4.444959)))
         }
 
         "emit subscriber messages along the route" in new WithApplication(FakeTestApp()) {

@@ -7,7 +7,7 @@ import traffic.actors.TripHandler.{SetSpeedFactor, StartTrip}
 import traffic.brokers.MessageBroker
 import traffic.model._
 
-class TrafficSimulator() extends Actor with ActorLogging {
+class TrafficSimulator(broker: MessageBroker) extends Actor with ActorLogging {
 
     import TrafficSimulator._
 
@@ -19,7 +19,7 @@ class TrafficSimulator() extends Actor with ActorLogging {
         val slide = Milliseconds(r.slide)
         val velocity = KilometersPerHour(r.velocity)
 
-        val tripHandler = context.actorOf(TripHandler.props(r.mcc, r.mnc, slide))
+        val tripHandler = context.actorOf(TripHandler.props(r.mcc, r.mnc, slide, broker))
 
         log.info("starting simulation")
         for (i <- 1 to r.numTrips) {
@@ -45,7 +45,7 @@ class TrafficSimulator() extends Actor with ActorLogging {
 }
 
 object TrafficSimulator {
-    def props() = Props(new TrafficSimulator())
+    def props(broker: MessageBroker) = Props(new TrafficSimulator(broker))
 
     case class StartSimulation(request: SimulatorRequest)
     case object StopSimulation

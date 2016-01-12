@@ -5,16 +5,11 @@ import java.util.UUID
 import akka.actor.{Actor, ActorLogging, Props}
 import play.api.libs.json.Json
 import traffic.brokers.MessageBroker
-import traffic.model.Celltower
+import traffic.model.{CelltowerEvent, Celltower}
 
 class CelltowerEventHandler(celltower: Celltower, template: CelltowerTemplate, broker: MessageBroker) extends Actor with ActorLogging {
 
     import CelltowerEventHandler._
-
-    case class CelltowerEvent(celltower: Celltower, bearerId: String, metrics: Map[String, Double])
-    object CelltowerEvent {
-        implicit val w = Json.writes[CelltowerEvent]
-    }
 
     def emitEvent(bearerId: UUID) = {
         val metrics = template.metrics.map { mt =>
