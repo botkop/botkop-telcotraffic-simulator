@@ -8,7 +8,7 @@ import play.api.libs.json.{JsError, JsResultException, Json}
 import play.api.mvc._
 import traffic.actors.{SimulatorSocketHandler, TrafficSimulator}
 import traffic.brokers.MessageBroker
-import traffic.model.JsonMessageParser
+import traffic.helpers.JsonMessageParser
 
 class Application extends Controller with LazyLogging {
 
@@ -69,7 +69,7 @@ class Application extends Controller with LazyLogging {
       * @return
       */
     def simulatorSocket() = WebSocket.acceptWithActor[String, String] { req => out =>
-        SimulatorSocketHandler.props(out, trafficSimulator)
+        SimulatorSocketHandler.props(out, trafficSimulator, messageInterpreter)
     }
 
 }

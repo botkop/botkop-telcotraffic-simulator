@@ -1,10 +1,11 @@
-package traffic.model
+package traffic.helpers
 
 import akka.actor.ActorRef
 import com.typesafe.scalalogging.LazyLogging
 import play.api.libs.json._
 import traffic.actors.TrafficSimulator.{StartSimulation, StopSimulation}
 import traffic.actors.TripHandler.SetSpeedFactor
+import traffic.model.SimulatorRequest
 
 case class JsonMessageParser (simulator: ActorRef) extends LazyLogging {
 

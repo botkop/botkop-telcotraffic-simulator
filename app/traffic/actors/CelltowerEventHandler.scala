@@ -11,7 +11,10 @@ class CelltowerEventHandler(celltower: Celltower, template: CelltowerTemplate, b
 
     import CelltowerEventHandler._
 
+    var counter = 0
+
     def emitEvent(bearerId: UUID) = {
+
         val metrics = template.metrics.map { mt =>
             (mt.name, mt.dist.sample())
         }.toMap
@@ -20,6 +23,8 @@ class CelltowerEventHandler(celltower: Celltower, template: CelltowerTemplate, b
         val message = Json.stringify(Json.toJson(celltowerEvent))
 
         broker.send("celltower-topic", message)
+
+        counter = counter + 1
     }
 
     override def receive: Receive = {
