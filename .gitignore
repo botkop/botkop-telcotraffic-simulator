@@ -8,3 +8,5 @@ target
 /.settings
 /RUNNING_PID
 *.swp
+data/*.csv
+data/traffic.db

@@ -1,13 +1,33 @@
 Telco Traffic Simulator
 =======================
 
-Just brainstorming for now ...
-
 The application allows to simulate imaginary mobile telco traffic.
-
 It is built with Scala and Akka actors, so can be deployed distributed over as many nodes as you like.
 
-Vocabulary:
+Creation of traffic.db
+----------------------
+To create the traffic.db data, you will need an installation of sqlite3 (see https://www.sqlite.org/ )
+You will also need an API key from http://opencellid.org/
+You also need wget if you want to follow the instructions below
+
+First, get the celltower database from opencellid.org, by executing:
+
+bin/download_celltower_db.sh
+
+Note: if you have a free account with opencellid, you will only be able to do this once a day.
+
+Now create the database, by executing:
+
+bin/create_traffic_db.sh
+
+
+
+
+
+
+
+Vocabulary
+----------
 - 'trip' is a combination of a 'subscriber', a 'route', and a 'velocity'
 - 'route' is a route calculated by Google, between 2 random points within the area defined by 'mcc' and 'mnc'
 - 'subscriber' is a random record taken from the traffic database table 'identities'
