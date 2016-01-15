@@ -11,31 +11,34 @@ class CelltowerEventHandler(celltower: Celltower, template: CelltowerTemplate, b
 
     import CelltowerEventHandler._
 
-    var counter = 0
+    var counter = 0L
 
     def emitEvent(bearerId: UUID) = {
 
-        val metrics = template.metrics.map { mt =>
+        counter = counter + 1
+
+        var metrics = template.metrics.map { mt =>
             (mt.name, mt.dist.sample())
         }.toMap
+
+        // add counter to the metrics map
+        metrics += ("event-counter" -> counter)
 
         val celltowerEvent = CelltowerEvent(celltower, bearerId.toString, metrics)
         val message = Json.stringify(Json.toJson(celltowerEvent))
 
         broker.send("celltower-topic", message)
-
-        counter = counter + 1
     }
 
     override def receive: Receive = {
         case EmitEvent(bearerId) => emitEvent(bearerId)
     }
+
 }
 
 object CelltowerEventHandler {
     def props(celltower: Celltower, template: CelltowerTemplate, broker: MessageBroker) =
         Props(new CelltowerEventHandler(celltower, template, broker))
     case class EmitEvent(bearerId: UUID)
-
 }
 
