@@ -43,6 +43,7 @@ object Route extends LazyLogging {
 
         Await.result(future, 3.seconds) match {
             case polyline: String =>
+                logger.debug("obtained this route from google: {}", polyline)
                 Some(Route(polyline))
             case err =>
                 logger.error(s"error retrieving directions from google: $err")

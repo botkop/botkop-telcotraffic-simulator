@@ -43,20 +43,25 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
         }
     }
 
+    val sub = Subscriber(
+        id = 1,
+        imsi = "imsi",
+        msisdn = "msisdn",
+        imei = "imei",
+        lastName = "lastName",
+        firstName = "firstName",
+        address = "address",
+        city = "city",
+        zip = "zip",
+        country = "country"
+    )
+
+    val mcc = 206
+    val mnc = 10
+    val slide = Milliseconds(250)
+
     def makeTrip(kmh: Double = 1200): Trip = {
         val route = Route("_p~iF~ps|U_ulLnnqC_mqNvxq`@")
-        val sub = Subscriber(
-            id = 1,
-            imsi = "imsi",
-            msisdn = "msisdn",
-            imei = "imei",
-            lastName = "lastName",
-            firstName = "firstName",
-            address = "address",
-            city = "city",
-            zip = "zip",
-            country = "country"
-        )
         val velocity: Velocity = KilometersPerHour(kmh)
         Trip(sub, route, velocity)
     }
@@ -69,24 +74,26 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
 
     "A TripHandler" must {
 
-        val mcc = 206
-        val mnc = 10
-        val slide = Milliseconds(250)
-
         "emit celltower messages along the route" in new WithApplication(FakeTestApp()) {
 
-            val trip = makeTrip()
+            val route = "_zpvHkvvUpA@HcCsLaB_AKQAs@SCcFAkA?mB@OTc@HM~@e@tDiB`BaAnGaDdDaBh@YFKh@[d@i@z@{A`@gA\\w@^m@d@k@d@a@vIoE~IuE|QoJjG}CpCiAxAa@t@MrAKnACf@@hAHjAPt@PfA\\`ChA~CnBrKlHzPpLdFhDrGxDVFf@ZhDlBhK~F|GzD~ErCnI|EfCzA^^\\f@\\~@Lj@b@hEdAzJNzBJfB@xAIdDUbDEn@@h@yBnOaClPaFd]wBpN_RjlAeEtXuC~QwBlMoDlRqDrRiMbq@uNpu@wHda@}Gd^yCtO}CtPyA|HaH`^mMvq@iG~[iGf\\iCpNkBvLuB|OuCpTkHri@_WpmBmNdfAyNxgA_Hbh@eE~[eMphAaHfn@q@zFmA~KqB`QeDtYuAlMgMniAyItv@mEj\\cXzpBc]bgCiDbVsA|HuChOyD~P[nBiAlEaCvIsPnj@_Vbx@k}@lzCuGnTuF|QgE|NwHlW{GxTcNhe@oe@h`BoEvOgA~DkAzE_BvHgEbUmCtN}DhTcW`uAmTfkAmRtdA{i@nxCubA`qF}VduAa@rBcCvM_CdLeB~G{BdIiCfIgBbFoC`HyBdF_FhKuP~]mHtOcCzFmBfFaBtEiBzFwAdF{@bDaAvDaCxKSbAm@`DoArHmBdNe@bEqBbQy@fHgSdfBkPbwAm@xE}A`LmBfMyBfMqC|NqErSiJ|_@uHd[gMlh@aL`e@wUz`AwTd~@}B|JmDrQiAxGwCxScAvI{E|b@mAtM{@vJc@|F]~HGlDAbGHzFHhCHnB^rFb@lEr@dF`ArFxEzUpD`RJh@x@lEzCzRv@rGrPbmAbClQjOvgAhBpKnAjGlAdFnB`H`EbNlTpt@|BfIdBhHv@nDdA|FjAnHbAxHx@vHxAfQdKvrAnMjaBvBzTdAhJvBrPzCvRzArI~BvLfEpRXjArArFfCrJ~Ojj@|@pC`DfL~AnFDt@Lh@T|AD~@Ez@O~@Sh@[b@m@^e@Dg@Ga@Y]g@Si@]eAEg@Cm@@a@Lw@dEmI|@aBnCkF`A}ATa@h@eArB{DnCuFb@qAfKaSTY|AuCzCeGnDeHpNqXxQo]h[{l@`i@ccA|Ra_@LKlA_CTa@f@x@jB~EpGrP~@vCb@EvGaCx@OJILMrDcGbBsC~BsDnB_DlAsA`@]nAw@fCsA|DkAxCe@"
+            val trip = Trip(sub, Route(route), KilometersPerHour(120))
+
             val broker = new ActorBroker(system, "celltower-topic")
             val tripHandler = system.actorOf(TripHandler.props(mcc, mnc, slide, broker))
-            tripHandler ! ContinueTrip(trip)
+            tripHandler ! StartTrip(trip)
             val seq: Seq[String] = receiveN(8, 2000.millis).asInstanceOf[Seq[String]]
             tripHandler ! PoisonPill
 
             logger.info(seq.toString())
 
-            val cl: Seq[CelltowerEvent] = seq flatMap { Json.parse(_).asOpt[CelltowerEvent] }
+            val events: Seq[CelltowerEvent] = seq flatMap { Json.parse(_).asOpt[CelltowerEvent] }
 
-            cl.last.celltower should be (Celltower(206,10,62584,9731,LatLng(48.433702,-4.444959)))
+            // we can't test for the exact celltower, since the database may change.
+            // so we test the approximate distance
+            val dist = events.last.celltower.location.distanceFrom(LatLng(51.045604,3.725985))
+            logger.debug("distance from reference: {}", dist.toString)
+            dist should be < 500.0 // less than 500 meters
         }
 
         "emit subscriber messages along the route" in new WithApplication(FakeTestApp()) {
