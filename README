@@ -22,7 +22,7 @@ Vocabulary
 How does it work ?
 ------------------
 Simulations are invoked by sending a simulation request to the service.
-You can launch a simulation through REST of through the web interface.
+You can launch a simulation through REST or through the web interface.
 By default the web interface is accessible at http://localhost:9000/simulator.
 Example scripts for using the REST interface are available in the bin/ folder.
 
@@ -66,6 +66,10 @@ bin/create_traffic_db.sh
 
 Running the simulator
 ---------------------
+
+You will need a Google API key from https://developers.google.com/maps/documentation/javascript/get-api-key.
+Once you have they you must create a file conf/cred.conf and enter it in there:
+google.api.key=YOUR_API_KEY
 
 To start the application, execute
 ./activator run
