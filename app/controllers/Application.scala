@@ -18,8 +18,6 @@ class Application extends Controller with LazyLogging {
 
     val trafficSimulator = system.actorOf(TrafficSimulator.props(broker))
 
-    val messageInterpreter = JsonMessageParser(trafficSimulator)
-
     /**
       * initialize message broker
       * @return
@@ -46,7 +44,7 @@ class Application extends Controller with LazyLogging {
       */
     def restRequest = Action(BodyParsers.parse.json) { request =>
         try {
-            messageInterpreter.interpreteJson(request.body)
+            trafficSimulator ! JsonMessageParser.interpreteJson(request.body)
             Ok(Json.obj("status" -> "OK"))
         } catch {
             case jre: JsResultException =>
@@ -69,7 +67,7 @@ class Application extends Controller with LazyLogging {
       * @return
       */
     def simulatorSocket() = WebSocket.acceptWithActor[String, String] { req => out =>
-        SimulatorSocketHandler.props(out, trafficSimulator, messageInterpreter)
+        SimulatorSocketHandler.props(out, trafficSimulator)
     }
 
 }

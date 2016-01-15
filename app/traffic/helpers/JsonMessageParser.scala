@@ -1,29 +1,28 @@
 package traffic.helpers
 
-import akka.actor.ActorRef
 import com.typesafe.scalalogging.LazyLogging
 import play.api.libs.json._
 import traffic.actors.TrafficSimulator.{StartSimulation, StopSimulation}
 import traffic.actors.TripHandler.SetSpeedFactor
 import traffic.model.SimulatorRequest
 
-case class JsonMessageParser (simulator: ActorRef) extends LazyLogging {
+case object JsonMessageParser extends LazyLogging {
 
     def setSpeedFactor(json: JsValue) = {
         val factor: Double = (json \ "request" \ "speedFactor").as[Double]
-        simulator ! SetSpeedFactor(factor)
+        SetSpeedFactor(factor)
     }
 
     def stopSimulator() = {
-        simulator ! StopSimulation
+        StopSimulation
     }
 
     def startSimulator(json: JsValue) = {
         val request = (json \ "request").as[SimulatorRequest]
-        simulator ! StartSimulation(request)
+        StartSimulation(request)
     }
 
-    def interpreteJson(json: JsValue) = {
+    def interpreteJson(json: JsValue): Product with Serializable = {
         val action = (json \ "action").as[String]
         action match {
             case "start" => startSimulator(json)
@@ -32,8 +31,9 @@ case class JsonMessageParser (simulator: ActorRef) extends LazyLogging {
         }
     }
 
-    def interpreteMessage(message: String) = {
+    def interpreteMessage(message: String): Product with Serializable = {
         val json: JsValue = Json.parse(message)
         interpreteJson(json)
     }
 }
+
