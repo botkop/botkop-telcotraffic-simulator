@@ -40,11 +40,13 @@ The subscriber is then sent on its way along this route, at the speed defined by
 
 Every 'slide' milliseconds, the location and the details of the subscriber will be published to the 'subscriber-topic' of the configured broker.
 At the same time, the celltower nearest to the subscriber is retrieved.
-This celltower will publish its details along with a bearer id and metrics to the broker.
+This celltower publishes its details along with a bearer id and metrics to the 'celltower-topic''.
 The bearer id allows to link the subscriber to the celltower event.
 The metrics are configurable in file conf/celltowers.conf.
 Every metric template consists of a metric name, a mean and a standard deviation.
 When a celltower event is published, a sample is taken from the gaussian distribution defined by these parameters.
+
+Note that currently all events are published in JSON format.
 
 Creation of traffic.db
 ----------------------
