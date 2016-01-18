@@ -8,7 +8,9 @@ class SimulatorSocketHandler(socket: ActorRef, simulator: ActorRef) extends Acto
     override def receive: Receive = {
         case message: String =>
             log.debug(s"received $message")
-            simulator ! JsonMessageParser.interpreteMessage(message)
+            val messageObject = JsonMessageParser.interpreteMessage(message)
+            simulator ! messageObject
+            socket ! message
     }
 }
 

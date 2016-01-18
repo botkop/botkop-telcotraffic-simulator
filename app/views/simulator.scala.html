@@ -176,7 +176,7 @@ function stopSimulator() {
 function setSpeedFactor() {
     var sf = parseFloat( $('#speedFactor').val() );
     console.log(sf);
-    var message = {action: "setSpeedFactor", speedFactor: sf };
+    var message = {action: "setSpeedFactor", request: { speedFactor: sf } };
     webSocket.send(JSON.stringify(message));
 }
 
