@@ -1,24 +1,26 @@
 package controllers
 
-import akka.actor.{ActorRef, ActorSystem}
+import javax.inject.{Inject, Singleton}
+
+import akka.actor.ActorSystem
+import akka.cluster.pubsub.DistributedPubSub
+import akka.cluster.pubsub.DistributedPubSubMediator.Publish
 import com.typesafe.scalalogging.LazyLogging
 import play.api.Configuration
 import play.api.Play.current
-import play.api.libs.json.{JsError, JsResultException, Json}
+import play.api.libs.json.Json
 import play.api.mvc._
 import traffic.actors.{SimulatorSocket, TrafficSimulator}
 import traffic.brokers.MessageBroker
-import traffic.helpers.JsonMessageParser
 
-class Application extends Controller with LazyLogging {
+@Singleton
+class Application @Inject() (val system: ActorSystem) extends Controller with LazyLogging {
 
-    val system = ActorSystem("traffic-simulator-system")
+    val mediator = DistributedPubSub(system).mediator
 
     val broker = initBroker
 
     val trafficSimulator = system.actorOf(TrafficSimulator.props(broker), "traffic-simulator")
-
-    var sockets = List[ActorRef]()
 
     /**
       * initialize message broker
@@ -45,16 +47,12 @@ class Application extends Controller with LazyLogging {
       * @return
       */
     def restRequest = Action(BodyParsers.parse.json) { request =>
-        try {
-            sockets.foreach(a => a ! Json.stringify(request.body) )
-            trafficSimulator ! JsonMessageParser.interpreteJson(request.body)
-            Ok(Json.obj("status" -> "OK"))
-        } catch {
-            case jre: JsResultException =>
-                BadRequest(Json.obj("status" -> "OK", "message" -> JsError.toJson(jre.errors)))
-            case e: Exception =>
-                BadRequest(Json.obj("status" -> "OK", "message" -> e.getMessage))
-        }
+        /*
+        received from REST interface
+        publish to mediator
+        */
+        mediator ! Publish("request-topic", request.body)
+        Ok(Json.obj("status" -> "OK"))
     }
 
     /**
@@ -70,7 +68,6 @@ class Application extends Controller with LazyLogging {
       * @return
       */
     def simulatorSocket() = WebSocket.acceptWithActor[String, String] { req => out =>
-        sockets = sockets :+ out
         SimulatorSocket.props(out, trafficSimulator)
     }
 
