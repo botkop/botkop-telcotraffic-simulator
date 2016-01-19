@@ -1,6 +1,7 @@
 package traffic.actors
 
 import akka.actor.{Actor, ActorLogging, Props}
+import akka.routing.BalancingPool
 import squants.motion.KilometersPerHour
 import squants.time.Milliseconds
 import traffic.actors.TripHandler.{SetSpeedFactor, StartTrip}
@@ -19,12 +20,13 @@ class TrafficSimulator(broker: MessageBroker) extends Actor with ActorLogging {
         val slide = Milliseconds(r.slide)
         val velocity = KilometersPerHour(r.velocity)
 
-        val tripHandler = context.actorOf(TripHandler.props(r.mcc, r.mnc, slide, broker))
+        val tripHandlerPool =
+            context.actorOf(new BalancingPool(r.numTrips).props(TripHandler.props(r.mcc, r.mnc, slide, broker)))
 
         log.info("starting simulation")
         for (i <- 1 to r.numTrips) {
             val trip = Trip.random(r.mcc, r.mnc, velocity)
-            tripHandler ! StartTrip(trip)
+            tripHandlerPool ! StartTrip(trip)
         }
     }
 

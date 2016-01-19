@@ -1,22 +1,24 @@
 package controllers
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem}
 import com.typesafe.scalalogging.LazyLogging
 import play.api.Configuration
 import play.api.Play.current
 import play.api.libs.json.{JsError, JsResultException, Json}
 import play.api.mvc._
-import traffic.actors.{SimulatorSocketHandler, TrafficSimulator}
+import traffic.actors.{SimulatorSocket, TrafficSimulator}
 import traffic.brokers.MessageBroker
 import traffic.helpers.JsonMessageParser
 
 class Application extends Controller with LazyLogging {
 
-    val system = ActorSystem("TrafficSimulatorSystem")
+    val system = ActorSystem("traffic-simulator-system")
 
     val broker = initBroker
 
-    val trafficSimulator = system.actorOf(TrafficSimulator.props(broker))
+    val trafficSimulator = system.actorOf(TrafficSimulator.props(broker), "traffic-simulator")
+
+    var sockets = List[ActorRef]()
 
     /**
       * initialize message broker
@@ -44,6 +46,7 @@ class Application extends Controller with LazyLogging {
       */
     def restRequest = Action(BodyParsers.parse.json) { request =>
         try {
+            sockets.foreach(a => a ! Json.stringify(request.body) )
             trafficSimulator ! JsonMessageParser.interpreteJson(request.body)
             Ok(Json.obj("status" -> "OK"))
         } catch {
@@ -67,7 +70,8 @@ class Application extends Controller with LazyLogging {
       * @return
       */
     def simulatorSocket() = WebSocket.acceptWithActor[String, String] { req => out =>
-        SimulatorSocketHandler.props(out, trafficSimulator)
+        sockets = sockets :+ out
+        SimulatorSocket.props(out, trafficSimulator)
     }
 
 }
