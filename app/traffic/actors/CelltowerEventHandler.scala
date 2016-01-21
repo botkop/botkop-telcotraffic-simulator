@@ -3,17 +3,12 @@ package traffic.actors
 import java.util.UUID
 
 import akka.actor.{Actor, ActorLogging, Props}
-import akka.cluster.client.ClusterClient.Publish
-import akka.cluster.pubsub.DistributedPubSub
-import play.libs.Akka
 import traffic.model.Celltower
 import traffic.protocol.CelltowerEvent
 
 class CelltowerEventHandler(celltower: Celltower, template: CelltowerTemplate) extends Actor with ActorLogging {
 
     import CelltowerEventHandler._
-
-    val mediator = DistributedPubSub(Akka.system()).mediator
 
     var counter = 0L
 
@@ -30,9 +25,8 @@ class CelltowerEventHandler(celltower: Celltower, template: CelltowerTemplate) e
 
         val celltowerEvent = CelltowerEvent(celltower, bearerId.toString, metrics)
 
-        celltowerEvent.publishTo(mediator)
+        celltowerEvent.publish()
 
-        // mediator ! Publish("celltower-topic", celltowerEvent)
     }
 
     override def receive: Receive = {

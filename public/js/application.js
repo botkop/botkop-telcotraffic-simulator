@@ -30,7 +30,6 @@ function startSimulator() {
     numTrips = parseInt($('#numTrips').val());
     velocity = parseInt($('#velocity').val());
     slideSize = parseInt($('#slideSize').val());
-    speedFactor = parseFloat($('#speedFactor').val());
 
     var request = {
         mcc: mcc,
@@ -38,7 +37,6 @@ function startSimulator() {
         numTrips: numTrips,
         velocity: velocity,
         slide: slideSize,
-        speedFactor: speedFactor,
         topic: "request-topic"
     };
     var message = { action: "start", request: request };
@@ -50,13 +48,6 @@ function startSimulator() {
 
 function stopSimulator() {
     var message = { action: "stop" };
-    socket.send(JSON.stringify(message));
-}
-
-function setSpeedFactor() {
-    var sf = parseFloat( $('#speedFactor').val() );
-    console.log(sf);
-    var message = {action: "setSpeedFactor", request: { speedFactor: sf } };
     socket.send(JSON.stringify(message));
 }
 
@@ -79,13 +70,17 @@ socket.onmessage = function(msg) {
         return;
     }
 
-    console.log("websocket received unkonwn message: " + JSON.stringify(msg.data));
+    if (event.topic == "request-topic") {
+        // todo: update input parameters
+        return;
+    }
+
+    console.log("websocket received unknown message: " + JSON.stringify(msg.data));
 };
 
 socket.onclose = function(msg) {
     console.log('Disconnected - see error log for more information');
 };
-
 
 /* methods */
 function unfollow() {
@@ -105,10 +100,9 @@ function initialize() {
         stopSimulator();
     })
 
-    $('#speedFactor').change(function() {
-        setSpeedFactor();
+    $('#unfollowButton').change(function() {
+        unfollow();
     })
-
 }
 
 function handleSubscriberEvent(subscriberEvent) {

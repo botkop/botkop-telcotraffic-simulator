@@ -3,11 +3,10 @@ package traffic.actors
 import akka.actor.{Actor, ActorLogging, Props}
 import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.Subscribe
-import akka.routing.BalancingPool
-import play.api.libs.json.{Json, JsValue}
+import play.api.libs.json.{JsValue, Json}
 import squants.motion.KilometersPerHour
 import squants.time.Milliseconds
-import traffic.actors.TripHandler.{SetSpeedFactor, StartTrip}
+import traffic.actors.TripHandler.StartTrip
 import traffic.model._
 import traffic.protocol.RequestEvent
 
@@ -52,12 +51,6 @@ class TrafficSimulator() extends Actor with ActorLogging {
         context.children.foreach(context.stop)
     }
 
-    def setSpeedFactor(json: JsValue) = {
-        val factor: Double = (json \ "request" \ "speedFactor").as[Double]
-        log.info("setting speed factor to {}", factor)
-        context.children.foreach( _ ! SetSpeedFactor(factor))
-    }
-
     def interpreteRequest(json: JsValue) = {
 
         log.debug(Json.stringify(json))
@@ -65,7 +58,6 @@ class TrafficSimulator() extends Actor with ActorLogging {
         val action = (json \ "action").as[String]
         action match {
             case "start" => startSimulation(json)
-            case "setSpeedFactor" => setSpeedFactor(json)
             case "stop" => stopSimulation()
         }
     }
@@ -76,8 +68,7 @@ class TrafficSimulator() extends Actor with ActorLogging {
         /*
         received from mediator: parse message and execute actions
         */
-        case request: JsValue =>
-            interpreteRequest(request)
+        case request: JsValue => interpreteRequest(request)
     }
 }
 

@@ -17,8 +17,6 @@ class TripHandler(mcc: Int, mnc: Int, slide: Time) extends Actor with ActorLoggi
 
     val slideDuration: FiniteDuration = Duration(slide.millis, MILLISECONDS)
 
-    var speedFactor: Double = 1.0
-
     def continueTrip(trip: Trip): Unit =  {
         if (trip.distanceCovered >= trip.totalDistance) {
             val nextTrip: Trip = Trip(trip, trip.totalDistance)
@@ -29,17 +27,11 @@ class TripHandler(mcc: Int, mnc: Int, slide: Time) extends Actor with ActorLoggi
 
         }
         else {
-            // log.debug("speedfactor is now: {}", speedFactor)
-            val slideDistance: Length = (trip.velocity * speedFactor) * slide
+            val slideDistance: Length = trip.velocity * slide
             val nextTrip = Trip(trip, trip.distanceCovered + slideDistance)
             locationHandler ! HandleLocation(nextTrip)
             context.system.scheduler.scheduleOnce(slideDuration, self, ContinueTrip(nextTrip))
         }
-    }
-
-    def setSpeedFactor(factor: Double) = {
-        log.info("setting speed factor to {}", factor)
-        this.speedFactor = factor
     }
 
     def startTrip(trip: Trip): Unit = {
@@ -52,8 +44,6 @@ class TripHandler(mcc: Int, mnc: Int, slide: Time) extends Actor with ActorLoggi
             startTrip(trip)
         case ContinueTrip(trip) =>
             continueTrip(trip)
-        case SetSpeedFactor(factor) =>
-            setSpeedFactor(factor)
     }
 }
 
@@ -61,7 +51,6 @@ object TripHandler {
 
     case class StartTrip(trip: Trip)
     case class ContinueTrip(trip: Trip)
-    case class SetSpeedFactor(factor: Double)
 
     def props (mcc: Int, mnc: Int, slide: Time): Props = {
         Props(new TripHandler(mcc, mnc, slide))

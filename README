@@ -15,7 +15,6 @@ Vocabulary
 - 'velocity' is the speed at which the subscribers travel, in kilometers per hour
 - 'trip' is a combination of a 'subscriber', a 'route', and a 'velocity'
 - 'slide' is the size of the sliding publishing window, in milliseconds. That is: how often do you want the events published.
-- 'speed factor': you can dynamically increase / decrease the velocity by this factor.
 - 'broker': where to publish the events ? See conf/application.conf.
 
 How does it work ?
@@ -31,11 +30,10 @@ A simulation request consists of the following parameters:
 - number of simultaneous trips
 - slide size
 - velocity
-- speed factor
 
 For each trip, a random subscriber and 2 random celltowers are picked from the database.
 A request is sent to Google to calculate the route between the locations of the 2 celltowers.
-The subscriber is then sent on its way along this route, at the speed defined by the velocity and the speed factor.
+The subscriber is then sent on its way along this route, at the speed defined by the velocity.
 
 Every 'slide' milliseconds, the location and the details of the subscriber will be published to the 'subscriber-topic' of the configured broker.
 At the same time, the celltower nearest to the subscriber is retrieved.

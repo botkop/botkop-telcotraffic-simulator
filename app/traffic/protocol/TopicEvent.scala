@@ -1,12 +1,15 @@
 package traffic.protocol
 
-import akka.actor.ActorRef
+import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.Publish
+import play.libs.Akka
 
 abstract class TopicEvent(topic: String) {
-    def publishTo(mediator: ActorRef) = {
+
+    val mediator = DistributedPubSub(Akka.system()).mediator
+
+    def publish() = {
         mediator ! Publish(topic, this)
     }
 }
-
 

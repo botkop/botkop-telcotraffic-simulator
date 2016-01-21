@@ -20,7 +20,6 @@ class Application @Inject() (val system: ActorSystem) extends Controller with La
 
     val broker = initBroker()
 
-
     val trafficSimulator = system.actorOf(TrafficSimulator.props(), "traffic-simulator")
 
     /**
