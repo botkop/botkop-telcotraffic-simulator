@@ -11,7 +11,7 @@ import play.api.Play.current
 import play.api.libs.json.Json
 import play.api.mvc._
 import traffic.actors.{SimulatorSocket, TrafficSimulator}
-import traffic.brokers.{MessageProvider, MessageBroker, LogBroker}
+import traffic.brokers.{MessageBroker, MessageProvider}
 
 @Singleton
 class Application @Inject() (val system: ActorSystem) extends Controller with LazyLogging {

@@ -1,12 +1,9 @@
 package traffic.actors
 
 import akka.actor.{Actor, ActorRef, Props}
-import play.api.Configuration
-import play.api.Play._
-import traffic.model.Trip
 import traffic.actors.CelltowerLocationHandler.HandleCelltowerLocation
 import traffic.actors.SubscriberEventHandler.HandleSubscriberEvent
-import traffic.brokers.MessageBroker
+import traffic.model.Trip
 
 class LocationHandler(mcc: Int, mnc: Int) extends Actor {
 
