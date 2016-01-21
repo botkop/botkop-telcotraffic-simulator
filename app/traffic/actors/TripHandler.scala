@@ -25,6 +25,9 @@ class TripHandler(mcc: Int, mnc: Int, slide: Time, broker: MessageBroker) extend
             val nextTrip: Trip = Trip(trip, trip.totalDistance)
             locationHandler ! HandleLocation(nextTrip)
             log.info("trip {}: finished", trip.bearerId)
+
+            context.stop(self);
+
         }
         else {
             // log.debug("speedfactor is now: {}", speedFactor)

@@ -4,7 +4,7 @@ import akka.actor._
 import breeze.stats.distributions.Gaussian
 import play.api.Configuration
 import play.api.Play.current
-import traffic.actors.CelltowerEventHandler.EmitEvent
+import traffic.actors.CelltowerEventHandler.EmitCelltowerEvent
 import traffic.brokers.MessageBroker
 import traffic.model.{Celltower, CelltowerCache, Trip}
 
@@ -37,13 +37,13 @@ class CelltowerLocationHandler(mcc: Int, mnc: Int, broker: MessageBroker) extend
 
     log.debug("read the following celltower templates: {}", templates.toString)
 
-    var celltowerActorMap = Map.empty[Int, ActorRef]
+    var celltowerActorMap = Map.empty[Celltower, ActorRef]
 
-    def getCelltowerActor(celltower: Celltower) = celltowerActorMap.getOrElse(celltower.cell, {
+    def getCelltowerActor(celltower: Celltower) = celltowerActorMap.getOrElse(celltower, {
         val templateIdx = celltower.cell % templates.length
         val template = templates(templateIdx)
         val actor = context actorOf Props(new CelltowerEventHandler(celltower, template, broker))
-        celltowerActorMap += celltower.cell -> actor
+        celltowerActorMap += celltower -> actor
         context watch actor
         actor
     })
@@ -61,7 +61,7 @@ class CelltowerLocationHandler(mcc: Int, mnc: Int, broker: MessageBroker) extend
             case Some(location) =>
                 val celltower: Celltower = celltowerCache.getNearest(location)
                 val celltowerActor = getCelltowerActor(celltower)
-                celltowerActor ! EmitEvent(trip.bearerId)
+                celltowerActor ! EmitCelltowerEvent(trip.bearerId)
             case None =>
                 log.error("unable to obtain location")
         }

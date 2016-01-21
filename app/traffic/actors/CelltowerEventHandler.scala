@@ -22,7 +22,7 @@ class CelltowerEventHandler(celltower: Celltower, template: CelltowerTemplate, b
         }.toMap
 
         // add counter to the metrics map
-        metrics += ("event-counter" -> counter)
+        metrics += ("eventCounter" -> counter)
 
         val celltowerEvent = CelltowerEvent(celltower, bearerId.toString, metrics)
         val message = Json.stringify(Json.toJson(celltowerEvent))
@@ -31,7 +31,7 @@ class CelltowerEventHandler(celltower: Celltower, template: CelltowerTemplate, b
     }
 
     override def receive: Receive = {
-        case EmitEvent(bearerId) => emitEvent(bearerId)
+        case EmitCelltowerEvent(bearerId) => emitEvent(bearerId)
     }
 
 }
@@ -39,6 +39,6 @@ class CelltowerEventHandler(celltower: Celltower, template: CelltowerTemplate, b
 object CelltowerEventHandler {
     def props(celltower: Celltower, template: CelltowerTemplate, broker: MessageBroker) =
         Props(new CelltowerEventHandler(celltower, template, broker))
-    case class EmitEvent(bearerId: UUID)
+    case class EmitCelltowerEvent(bearerId: UUID)
 }
 

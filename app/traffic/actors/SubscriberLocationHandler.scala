@@ -1,10 +1,9 @@
 package traffic.actors
 
 import akka.actor.{Actor, Props}
-import geo.LatLng
-import traffic.model.{Trip, SubscriberLocation}
 import play.api.libs.json.Json
 import traffic.brokers.MessageBroker
+import traffic.model.{SubscriberLocation, Trip}
 
 class SubscriberLocationHandler(mcc: Int, mnc: Int, broker: MessageBroker) extends Actor {
     import SubscriberLocationHandler._

@@ -10,3 +10,5 @@ target
 *.swp
 data/*.csv
 data/traffic.db
+node_modules
+

@@ -4,23 +4,54 @@
 
 <html lang="en">
     <head>
+        <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
         <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="description" content="">
-        <meta name="author" content="">
-
         <title>@title</title>
+        <link rel="stylesheet" type="text/css" href='@routes.Assets.versioned("js/jquery-ui.min.css")'>
+        <style>
+            html, body, #map-canvas {
+                margin: 0px;
+                padding: 0px
+            }
 
-        <link rel="stylesheet" media="screen" href='@routes.Assets.versioned("stylesheets/bootstrap.min.css")'>
-        <link rel="stylesheet" media="screen" href='@routes.Assets.versioned("stylesheets/simple-sidebar.css")'>
+            body {
+                font: 60% "Trebuchet MS", sans-serif;
+                color: white;
+            }
 
-        <link rel="shortcut icon" type="image/png" href='@routes.Assets.versioned("images/favicon.png")'>
+            #map-canvas {
+                position: absolute;
+                height: 100%;
+                width: 100%;
+                top: 0px;
+                left: 0px;
+            }
 
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-        <script src='@routes.Assets.versioned("js/bootstrap.min.js")' type="text/javascript"></script>
+            #selection-area {
+                position: absolute;
+                top: 10%;
+                width: 10%;
+                left: 1em;
+                height: 100px;
+                background-color: transparent;
+                z-index: 1;
+                text-align: left;
+                /*
+                border: white 1px solid;
+                */
+            }
+
+        </style>
+        <script src='@routes.Assets.versioned("js/external/jquery/jquery.js")'></script>
+        <script src='@routes.Assets.versioned("js/jquery-ui.min.js")'></script>
+        <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing"></script>
     </head>
     <body>
         @content
     </body>
+    <script>
+        var imageFolder = '@routes.Assets.versioned("images/")';
+        console.log(imageFolder);
+    </script>
+    <script src='@routes.Assets.versioned("js/application.js")'></script>
 </html>
