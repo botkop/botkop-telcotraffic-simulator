@@ -13,6 +13,7 @@ import squants.time.Milliseconds
 import traffic.FakeTestApp
 import traffic.brokers.MessageBroker
 import traffic.model._
+import traffic.protocol.{SubscriberEvent, CelltowerEvent}
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -107,7 +108,7 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
 
             logger.info(seq.toString())
 
-            val sl: Seq[SubscriberLocation] = seq flatMap { Json.parse(_).asOpt[SubscriberLocation] }
+            val sl: Seq[SubscriberEvent] = seq flatMap { Json.parse(_).asOpt[SubscriberEvent] }
 
             sl.last.location should be (LatLng(38.50579234464571,-120.2019746629474))
         }
@@ -124,7 +125,7 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
 
             logger.info(seq.toString())
 
-            val sl: Seq[SubscriberLocation] = seq flatMap { Json.parse(_).asOpt[SubscriberLocation] }
+            val sl: Seq[SubscriberEvent] = seq flatMap { Json.parse(_).asOpt[SubscriberEvent] }
 
             sl.last.location should be (LatLng(38.50579234464571,-120.2019746629474))
         }

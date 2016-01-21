@@ -3,13 +3,17 @@ package traffic.actors
 import java.util.UUID
 
 import akka.actor.{Actor, ActorLogging, Props}
-import play.api.libs.json.Json
-import traffic.brokers.MessageBroker
-import traffic.model.{Celltower, CelltowerEvent}
+import akka.cluster.client.ClusterClient.Publish
+import akka.cluster.pubsub.DistributedPubSub
+import play.libs.Akka
+import traffic.model.Celltower
+import traffic.protocol.CelltowerEvent
 
-class CelltowerEventHandler(celltower: Celltower, template: CelltowerTemplate, broker: MessageBroker) extends Actor with ActorLogging {
+class CelltowerEventHandler(celltower: Celltower, template: CelltowerTemplate) extends Actor with ActorLogging {
 
     import CelltowerEventHandler._
+
+    val mediator = DistributedPubSub(Akka.system()).mediator
 
     var counter = 0L
 
@@ -25,9 +29,10 @@ class CelltowerEventHandler(celltower: Celltower, template: CelltowerTemplate, b
         metrics += ("eventCounter" -> counter)
 
         val celltowerEvent = CelltowerEvent(celltower, bearerId.toString, metrics)
-        val message = Json.stringify(Json.toJson(celltowerEvent))
 
-        broker.send("celltower-topic", message)
+        celltowerEvent.publishTo(mediator)
+
+        // mediator ! Publish("celltower-topic", celltowerEvent)
     }
 
     override def receive: Receive = {
@@ -37,8 +42,8 @@ class CelltowerEventHandler(celltower: Celltower, template: CelltowerTemplate, b
 }
 
 object CelltowerEventHandler {
-    def props(celltower: Celltower, template: CelltowerTemplate, broker: MessageBroker) =
-        Props(new CelltowerEventHandler(celltower, template, broker))
+    def props(celltower: Celltower, template: CelltowerTemplate) =
+        Props(new CelltowerEventHandler(celltower, template))
     case class EmitCelltowerEvent(bearerId: UUID)
 }
 

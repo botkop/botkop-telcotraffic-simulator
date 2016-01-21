@@ -4,21 +4,21 @@ import akka.actor.{Actor, ActorLogging, Props}
 import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.Subscribe
 import akka.routing.BalancingPool
-import play.api.libs.json.JsValue
+import play.api.libs.json.{Json, JsValue}
 import squants.motion.KilometersPerHour
 import squants.time.Milliseconds
 import traffic.actors.TripHandler.{SetSpeedFactor, StartTrip}
-import traffic.brokers.MessageBroker
 import traffic.model._
+import traffic.protocol.RequestEvent
 
-class TrafficSimulator(broker: MessageBroker) extends Actor with ActorLogging {
+class TrafficSimulator() extends Actor with ActorLogging {
 
     val mediator = DistributedPubSub(context.system).mediator
     mediator ! Subscribe("request-topic", self)
 
     def startSimulation(json: JsValue) = {
 
-        val r = (json \ "request").as[SimulatorRequest]
+        val r = (json \ "request").as[RequestEvent]
 
         // stop running simulation before starting a new one
         stopSimulation()
@@ -29,7 +29,7 @@ class TrafficSimulator(broker: MessageBroker) extends Actor with ActorLogging {
         val velocity = KilometersPerHour(r.velocity)
 
         val tripHandlerPool =
-            context.actorOf(new BalancingPool(r.numTrips).props(TripHandler.props(r.mcc, r.mnc, slide, broker)))
+            context.actorOf(new BalancingPool(r.numTrips).props(TripHandler.props(r.mcc, r.mnc, slide)))
 
         log.info("starting simulation")
         for (i <- 1 to r.numTrips) {
@@ -49,7 +49,10 @@ class TrafficSimulator(broker: MessageBroker) extends Actor with ActorLogging {
         context.children.foreach( _ ! SetSpeedFactor(factor))
     }
 
-    def interpreteJson(json: JsValue) = {
+    def interpreteRequest(json: JsValue) = {
+
+        log.debug(Json.stringify(json))
+
         val action = (json \ "action").as[String]
         action match {
             case "start" => startSimulation(json)
@@ -65,11 +68,11 @@ class TrafficSimulator(broker: MessageBroker) extends Actor with ActorLogging {
         received from mediator: parse message and execute actions
         */
         case request: JsValue =>
-            interpreteJson(request)
+            interpreteRequest(request)
     }
 }
 
 object TrafficSimulator {
-    def props(broker: MessageBroker) = Props(new TrafficSimulator(broker))
+    def props() = Props(new TrafficSimulator())
 }
 

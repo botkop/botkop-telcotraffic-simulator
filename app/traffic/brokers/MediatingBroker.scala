@@ -6,7 +6,6 @@ import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.Publish
 import com.typesafe.scalalogging.LazyLogging
 import play.libs.Akka
-import traffic.actors.SimulatorSocket.MediatingBrokerEvent
 
 @Singleton
 class MediatingBroker extends MessageBroker with LazyLogging {
@@ -20,6 +19,6 @@ class MediatingBroker extends MessageBroker with LazyLogging {
                |  "payload": $message
                |}""".stripMargin
 
-        mediator ! Publish(topic, MediatingBrokerEvent(event))
+        mediator ! Publish(topic, event)
     }
 }

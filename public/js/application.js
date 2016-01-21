@@ -32,7 +32,15 @@ function startSimulator() {
     slideSize = parseInt($('#slideSize').val());
     speedFactor = parseFloat($('#speedFactor').val());
 
-    var request = { mcc: mcc, mnc: mnc, numTrips: numTrips, velocity: velocity, slide: slideSize, speedFactor: speedFactor };
+    var request = {
+        mcc: mcc,
+        mnc: mnc,
+        numTrips: numTrips,
+        velocity: velocity,
+        slide: slideSize,
+        speedFactor: speedFactor,
+        topic: "request-topic"
+    };
     var message = { action: "start", request: request };
     var json = JSON.stringify(message);
 
@@ -62,12 +70,12 @@ socket.onopen = function(msg) {
 socket.onmessage = function(msg) {
     var event = JSON.parse(msg.data);
     if (event.topic == "subscriber-topic") {
-        handleSubscriberEvent(event.payload);
+        handleSubscriberEvent(event);
         return;
     }
 
     if (event.topic == "celltower-topic") {
-        handleCelltowerEvent(event.payload);
+        handleCelltowerEvent(event);
         return;
     }
 
@@ -150,5 +158,4 @@ function handleCelltowerEvent(celltowerEvent) {
 }
 
 google.maps.event.addDomListener(window, 'load', initialize);
-
 

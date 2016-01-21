@@ -5,7 +5,6 @@ import breeze.stats.distributions.Gaussian
 import play.api.Configuration
 import play.api.Play.current
 import traffic.actors.CelltowerEventHandler.EmitCelltowerEvent
-import traffic.brokers.MessageBroker
 import traffic.model.{Celltower, CelltowerCache, Trip}
 
 import scala.collection.JavaConversions._
@@ -13,7 +12,7 @@ import scala.collection.JavaConversions._
 case class MetricTemplate(name: String, dist: Gaussian)
 case class CelltowerTemplate(name: String, metrics: List[MetricTemplate])
 
-class CelltowerLocationHandler(mcc: Int, mnc: Int, broker: MessageBroker) extends Actor with ActorLogging {
+class CelltowerLocationHandler(mcc: Int, mnc: Int) extends Actor with ActorLogging {
 
     import CelltowerLocationHandler._
 
@@ -42,7 +41,7 @@ class CelltowerLocationHandler(mcc: Int, mnc: Int, broker: MessageBroker) extend
     def getCelltowerActor(celltower: Celltower) = celltowerActorMap.getOrElse(celltower, {
         val templateIdx = celltower.cell % templates.length
         val template = templates(templateIdx)
-        val actor = context actorOf Props(new CelltowerEventHandler(celltower, template, broker))
+        val actor = context actorOf Props(new CelltowerEventHandler(celltower, template))
         celltowerActorMap += celltower -> actor
         context watch actor
         actor
@@ -71,6 +70,6 @@ class CelltowerLocationHandler(mcc: Int, mnc: Int, broker: MessageBroker) extend
 
 object CelltowerLocationHandler {
     case class HandleCelltowerLocation(trip: Trip)
-    def props(mcc: Int, mnc: Int, broker: MessageBroker) = Props(new CelltowerLocationHandler(mcc, mnc, broker))
+    def props(mcc: Int, mnc: Int) = Props(new CelltowerLocationHandler(mcc, mnc))
 }
 

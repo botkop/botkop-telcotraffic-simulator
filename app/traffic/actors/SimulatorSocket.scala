@@ -4,9 +4,9 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.{Publish, Subscribe}
 import play.api.libs.json.{JsValue, Json}
-import traffic.actors.SimulatorSocket.MediatingBrokerEvent
+import traffic.protocol.{CelltowerEvent, SubscriberEvent}
 
-class SimulatorSocket(socket: ActorRef, simulator: ActorRef) extends Actor with ActorLogging {
+class SimulatorSocket(socket: ActorRef) extends Actor with ActorLogging {
 
     val mediator = DistributedPubSub(context.system).mediator
     mediator ! Subscribe("request-topic", self)
@@ -20,25 +20,28 @@ class SimulatorSocket(socket: ActorRef, simulator: ActorRef) extends Actor with 
         transform to json and send to mediator
         */
         case message: String =>
+            log.debug("received message: {}", message)
+
             val json: JsValue = Json.parse(message)
             mediator ! Publish("request-topic", json)
 
-        /*
-        received from mediator
-        stringify and publish to all active web sockets
-        */
-        case request: JsValue =>
-            socket ! Json.stringify(request)
+            /*
+            received from mediator
+            stringify and publish to all active web sockets
+            */
+            case request: JsValue =>
+                socket ! Json.stringify(request)
 
-        case MediatingBrokerEvent(message) =>
-            socket ! message
+        case event: SubscriberEvent =>
+            socket ! Json.stringify(Json.toJson(event))
+
+        case event: CelltowerEvent =>
+            socket ! Json.stringify(Json.toJson(event))
 
     }
 }
 
 object SimulatorSocket {
-    def props(socket: ActorRef, simulator: ActorRef) = Props(new SimulatorSocket(socket, simulator))
-
-    case class MediatingBrokerEvent(message: String)
+    def props(socket: ActorRef) = Props(new SimulatorSocket(socket))
 }
 

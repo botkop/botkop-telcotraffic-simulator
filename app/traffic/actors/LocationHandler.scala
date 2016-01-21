@@ -5,20 +5,20 @@ import play.api.Configuration
 import play.api.Play._
 import traffic.model.Trip
 import traffic.actors.CelltowerLocationHandler.HandleCelltowerLocation
-import traffic.actors.SubscriberLocationHandler.HandleSubscriberLocation
+import traffic.actors.SubscriberEventHandler.HandleSubscriberEvent
 import traffic.brokers.MessageBroker
 
-class LocationHandler(mcc: Int, mnc: Int, broker: MessageBroker) extends Actor {
+class LocationHandler(mcc: Int, mnc: Int) extends Actor {
 
     import LocationHandler._
 
-    val subscriberLocationHandler: ActorRef = context.actorOf(SubscriberLocationHandler.props(mcc, mnc, broker))
-    val celltowerLocationHandler: ActorRef = context.actorOf(CelltowerLocationHandler.props(mcc, mnc, broker))
+    val subscriberLocationHandler: ActorRef = context.actorOf(SubscriberEventHandler.props())
+    val celltowerLocationHandler: ActorRef = context.actorOf(CelltowerLocationHandler.props(mcc, mnc))
 
     override def receive: Receive = {
 
         case HandleLocation(trip: Trip) =>
-            subscriberLocationHandler ! HandleSubscriberLocation(trip: Trip)
+            subscriberLocationHandler ! HandleSubscriberEvent(trip: Trip)
             celltowerLocationHandler ! HandleCelltowerLocation(trip: Trip)
 
     }
@@ -26,7 +26,6 @@ class LocationHandler(mcc: Int, mnc: Int, broker: MessageBroker) extends Actor {
 }
 
 object LocationHandler {
-    def props(mcc: Int, mnc: Int, broker: MessageBroker) =
-        Props(new LocationHandler(mcc, mnc, broker))
+    def props(mcc: Int, mnc: Int) = Props(new LocationHandler(mcc, mnc))
     case class HandleLocation(trip: Trip)
 }

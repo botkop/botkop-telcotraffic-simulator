@@ -20,7 +20,7 @@ class Application @Inject() (val system: ActorSystem) extends Controller with La
 
     val broker = initBroker
 
-    val trafficSimulator = system.actorOf(TrafficSimulator.props(broker), "traffic-simulator")
+    val trafficSimulator = system.actorOf(TrafficSimulator.props(), "traffic-simulator")
 
     /**
       * initialize message broker
@@ -68,7 +68,7 @@ class Application @Inject() (val system: ActorSystem) extends Controller with La
       * @return
       */
     def simulatorSocket() = WebSocket.acceptWithActor[String, String] { req => out =>
-        SimulatorSocket.props(out, trafficSimulator)
+        SimulatorSocket.props(out)
     }
 
 }
