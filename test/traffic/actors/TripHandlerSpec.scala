@@ -81,7 +81,7 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
             val trip = Trip(sub, Route(route), KilometersPerHour(120))
 
             val broker = new ActorBroker(system, "celltower-topic")
-            val tripHandler = system.actorOf(TripHandler.props(mcc, mnc, slide, broker))
+            val tripHandler = system.actorOf(TripHandler.props(mcc, mnc, slide))
             tripHandler ! StartTrip(trip)
             val seq: Seq[String] = receiveN(8, 2000.millis).asInstanceOf[Seq[String]]
             tripHandler ! PoisonPill
@@ -101,7 +101,7 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
 
             val trip = makeTrip()
             val broker = new ActorBroker(system, "subscriber-topic")
-            val tripHandler = system.actorOf(TripHandler.props(mcc, mnc, slide, broker))
+            val tripHandler = system.actorOf(TripHandler.props(mcc, mnc, slide))
             tripHandler ! ContinueTrip(trip)
             val seq: Seq[String] = receiveN(8, 2000.millis).asInstanceOf[Seq[String]]
             tripHandler ! PoisonPill
@@ -117,7 +117,7 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
 
             val trip = makeTrip(120)
             val broker = new ActorBroker(system, "subscriber-topic")
-            val tripHandler = system.actorOf(TripHandler.props(mcc, mnc, slide, broker))
+            val tripHandler = system.actorOf(TripHandler.props(mcc, mnc, slide))
             tripHandler ! SetSpeedFactor(10)
             tripHandler ! ContinueTrip(trip)
             val seq: Seq[String] = receiveN(8, 2000.millis).asInstanceOf[Seq[String]]

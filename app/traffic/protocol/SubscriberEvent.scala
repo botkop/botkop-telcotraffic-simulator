@@ -11,9 +11,10 @@ case class SubscriberEvent(subscriber: Subscriber, location: LatLng, bearerId: U
 
 object SubscriberEvent {
 
+    implicit val f = Json.format[SubscriberEvent]
+
     def extract(trip: Trip): SubscriberEvent = {
         SubscriberEvent(trip.subscriber, trip.currentLocation.get, trip.bearerId)
     }
 
-    implicit val f = Json.format[SubscriberEvent]
 }

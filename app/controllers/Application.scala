@@ -11,14 +11,15 @@ import play.api.Play.current
 import play.api.libs.json.Json
 import play.api.mvc._
 import traffic.actors.{SimulatorSocket, TrafficSimulator}
-import traffic.brokers.MessageBroker
+import traffic.brokers.{MessageProvider, MessageBroker, LogBroker}
 
 @Singleton
 class Application @Inject() (val system: ActorSystem) extends Controller with LazyLogging {
 
     val mediator = DistributedPubSub(system).mediator
 
-    val broker = initBroker
+    val broker = initBroker()
+
 
     val trafficSimulator = system.actorOf(TrafficSimulator.props(), "traffic-simulator")
 
@@ -26,7 +27,7 @@ class Application @Inject() (val system: ActorSystem) extends Controller with La
       * initialize message broker
       * @return
       */
-    def initBroker: MessageBroker = {
+    def initBroker() = {
         val conf = current.configuration
         val brokerName: String = conf.getString("messageBroker").get
         val brokerConfig: Configuration = conf.getConfig(brokerName).get
@@ -39,7 +40,8 @@ class Application @Inject() (val system: ActorSystem) extends Controller with La
                 broker.configure(properties)
             case _ =>
         }
-        broker
+
+        system.actorOf(MessageProvider.props(broker))
     }
 
     /**

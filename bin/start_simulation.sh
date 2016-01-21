@@ -9,7 +9,8 @@ curl -X POST -i -H "Content-type: application/json" -X POST http://localhost:900
         "numTrips": 6,
         "velocity": 120,
         "slide": 500,
-        "speedFactor": 1.0
+        "speedFactor": 1.0,
+        "topic": "request-topic"
     }
 }
 '
