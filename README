@@ -79,8 +79,9 @@ in the root of the checked out code.
 TODO
 ----
 Describe how to configure for distributed deployment.
-Visualize trips and active celltowers in web interface.
 Introduce anomalies in the metrics.
+Improve visualization.
+Allow for multiple brokers (for example logging and kafka)
 
 
 If you have ideas, please send them to
