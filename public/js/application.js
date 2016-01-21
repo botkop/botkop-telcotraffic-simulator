@@ -70,10 +70,8 @@ socket.onmessage = function(msg) {
         return;
     }
 
-    if (event.topic == "request-topic") {
-        // todo: update input parameters
-        return;
-    }
+    // todo: handle requests from browsers and rest
+    // update input parameters
 
     console.log("websocket received unknown message: " + JSON.stringify(msg.data));
 };
@@ -84,6 +82,7 @@ socket.onclose = function(msg) {
 
 /* methods */
 function unfollow() {
+    console.log("unfollow");
     subscriberToFollow = null;
 }
 
@@ -100,7 +99,7 @@ function initialize() {
         stopSimulator();
     })
 
-    $('#unfollowButton').change(function() {
+    $('#unfollowButton').click(function() {
         unfollow();
     })
 }

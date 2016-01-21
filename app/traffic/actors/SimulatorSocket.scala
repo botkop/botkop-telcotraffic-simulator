@@ -1,5 +1,7 @@
 package traffic.actors
 
+import javax.inject.Singleton
+
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.{Publish, Subscribe}
