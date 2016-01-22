@@ -8,7 +8,6 @@ import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
 import geo.LatLng
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
-import play.api.libs.json.Json
 import play.api.test.WithApplication
 import play.libs.Akka
 import squants.Velocity
@@ -16,13 +15,12 @@ import squants.motion.KilometersPerHour
 import squants.time.Milliseconds
 import traffic.FakeTestApp
 import traffic.model._
-import traffic.protocol.{SubscriberEvent, CelltowerEvent}
+import traffic.protocol.{CelltowerEvent, SubscriberEvent}
 
 import scala.collection.immutable.Seq
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-//class TripHandlerSpec (_system: ActorSystem) extends TestKit @Inject()(_system) with ImplicitSender
 class TripHandlerSpec (_system: ActorSystem) extends TestKit (_system) with ImplicitSender
 with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
 
@@ -53,7 +51,7 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
 
     def subscribe() = {
         /*
-        note: using the default akka system, because that is where the actors under test are publshing to
+        note: subscribing to the default akka system, because that is where the actors under test are publishing to
         */
         val mediator = DistributedPubSub(Akka.system()).mediator
         mediator ! Subscribe("celltower-topic", self)
@@ -62,8 +60,8 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
 
     /*
     for some reason we have 2 actor systems at work, probably because of dependency injection
-    we use analternative configuration for the testing actor system
-     */
+    we use an alternative configuration for the testing actor system
+    */
     def this() = this(ActorSystem(name = "TripHandlerSpec", config = ConfigFactory.load("test.conf")))
 
     override def afterAll() {
@@ -71,7 +69,6 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
     }
 
     "A TripHandler" must {
-
 
         "emit celltower messages along the route" in new WithApplication(FakeTestApp()) {
 
@@ -104,7 +101,7 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
 
             val trip = makeTrip()
             val tripHandler = system.actorOf(TripHandler.props(mcc, mnc, slide))
-            tripHandler ! ContinueTrip(trip)
+            tripHandler ! StartTrip(trip)
 
             val events: Seq[SubscriberEvent] = receiveN(18, 2000.millis).flatMap {
                 case event: SubscriberEvent => Some(event)
