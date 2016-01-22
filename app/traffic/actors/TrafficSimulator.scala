@@ -3,6 +3,7 @@ package traffic.actors
 import akka.actor.{Actor, ActorLogging, Props}
 import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.Subscribe
+import akka.routing.BalancingPool
 import play.api.libs.json.{JsValue, Json}
 import squants.motion.KilometersPerHour
 import squants.time.Milliseconds
@@ -27,17 +28,8 @@ class TrafficSimulator() extends Actor with ActorLogging {
         val slide = Milliseconds(r.slide)
         val velocity = KilometersPerHour(r.velocity)
 
-        /*
         val tripHandlerPool =
             context.actorOf(new BalancingPool(r.numTrips).props(TripHandler.props(r.mcc, r.mnc, slide)))
-        */
-        // above pool seems to cause problems with the DistributedPubSub mechanism:
-        // not all tripHandlers seem to publish reliably
-        // to be investigated
-        // reverting to single actor for now
-
-        val tripHandlerPool =
-            context.actorOf(TripHandler.props(r.mcc, r.mnc, slide))
 
         log.info("starting simulation")
         for (i <- 1 to r.numTrips) {

@@ -1,7 +1,5 @@
 package traffic.actors
 
-import javax.inject.Singleton
-
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.{Publish, Subscribe}
@@ -27,12 +25,12 @@ class SimulatorSocket(socket: ActorRef) extends Actor with ActorLogging {
             val json: JsValue = Json.parse(message)
             mediator ! Publish("request-topic", json)
 
-            /*
-            received from mediator
-            stringify and publish to all active web sockets
-            */
-            case request: JsValue =>
-                socket ! Json.stringify(request)
+        /*
+        received from mediator
+        stringify and publish to all active web sockets
+        */
+        case request: JsValue =>
+            socket ! Json.stringify(request)
 
         case event: SubscriberEvent =>
             socket ! Json.stringify(Json.toJson(event))
