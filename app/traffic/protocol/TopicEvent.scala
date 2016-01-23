@@ -6,7 +6,7 @@ import play.libs.Akka
 
 abstract class TopicEvent(topic: String) {
 
-    val mediator = DistributedPubSub(Akka.system()).mediator
+    lazy val mediator = DistributedPubSub(Akka.system()).mediator
 
     def publish() = {
         mediator ! Publish(topic, this)

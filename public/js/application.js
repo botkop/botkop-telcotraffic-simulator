@@ -102,6 +102,31 @@ function initialize() {
     $('#unfollowButton').click(function() {
         unfollow();
     })
+
+    $( "#slideSizeSlider" ).slider({
+        min: 100,
+        max: 10000,
+        step: 100,
+        value: 500,
+        slide: function( event, ui ) {
+            $( "#slideSize" ).val( ui.value );
+        }
+    });
+
+    $( "#slideSize" ).val( $( "#slideSizeSlider" ).slider( "value" ) );
+
+    $( "#velocitySlider" ).slider({
+        min: 0,
+        max: 12000,
+        step: 10,
+        value: 120,
+        slide: function( event, ui ) {
+            $( "#velocity" ).val( ui.value );
+        }
+    });
+
+    $( "#velocity" ).val( $( "#velocitySlider" ).slider( "value" ) );
+
 }
 
 function handleSubscriberEvent(subscriberEvent) {

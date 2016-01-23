@@ -79,11 +79,7 @@ in the root of the checked out code.
 
 TODO
 ----
-Describe how to configure for distributed deployment.
-Introduce anomalies in the metrics.
-Improve visualization.
-Allow for multiple brokers (for example logging and kafka)
-
+see https://github.com/koen-dejonghe/play-traffic/issues
 
 If you have ideas, please send them to
 koen@fietsoverland.com

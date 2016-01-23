@@ -44,9 +44,7 @@ class TrafficSimulator() extends Actor with ActorLogging {
     }
 
     def interpreteRequest(json: JsValue) = {
-
         log.debug(Json.stringify(json))
-
         val action = (json \ "action").as[String]
         action match {
             case "start" => startSimulation(json)
@@ -54,9 +52,7 @@ class TrafficSimulator() extends Actor with ActorLogging {
         }
     }
 
-
     override def receive: Receive = {
-
         /*
         received from mediator: parse message and execute actions
         */

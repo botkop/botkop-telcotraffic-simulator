@@ -32,6 +32,9 @@ class SimulatorSocket(socket: ActorRef) extends Actor with ActorLogging {
         case request: JsValue =>
             socket ! Json.stringify(request)
 
+        /*
+        events emitted by simulator: pass them on to the sockets
+        */
         case event: SubscriberEvent =>
             socket ! Json.stringify(Json.toJson(event))
 
