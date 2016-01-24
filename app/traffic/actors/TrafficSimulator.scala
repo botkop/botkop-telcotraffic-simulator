@@ -9,7 +9,7 @@ import squants.motion.KilometersPerHour
 import squants.time.Milliseconds
 import traffic.actors.TripHandler.StartTrip
 import traffic.model._
-import traffic.protocol.RequestEvent
+import traffic.protocol.{RequestUpdateEvent, RequestEvent}
 
 class TrafficSimulator() extends Actor with ActorLogging {
 
@@ -43,11 +43,18 @@ class TrafficSimulator() extends Actor with ActorLogging {
         context.children.foreach(context.stop)
     }
 
+    def updateSimulation(json: JsValue) = {
+        val r = (json \ "request").as[RequestUpdateEvent]
+        log.info("request update event: " + r.toString)
+        context.children.foreach(_ ! r)
+    }
+
     def interpreteRequest(json: JsValue) = {
         log.debug(Json.stringify(json))
         val action = (json \ "action").as[String]
         action match {
             case "start" => startSimulation(json)
+            case "update" => updateSimulation(json)
             case "stop" => stopSimulation()
         }
     }

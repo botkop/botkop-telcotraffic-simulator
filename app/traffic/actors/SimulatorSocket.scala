@@ -23,6 +23,7 @@ class SimulatorSocket(socket: ActorRef) extends Actor with ActorLogging {
             log.debug("received message: {}", message)
 
             val json: JsValue = Json.parse(message)
+            // to do: perhaps this can be published imnediately to the traffic simulator
             mediator ! Publish("request-topic", json)
 
         /*
@@ -34,6 +35,7 @@ class SimulatorSocket(socket: ActorRef) extends Actor with ActorLogging {
 
         /*
         events emitted by simulator: pass them on to the sockets
+        TO DO: perhaps this should be moved to its own broker
         */
         case event: SubscriberEvent =>
             socket ! Json.stringify(Json.toJson(event))

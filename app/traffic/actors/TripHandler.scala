@@ -2,20 +2,21 @@ package traffic.actors
 
 import akka.actor.{Actor, ActorLogging, Props}
 import squants._
-import squants.time.Time
+import squants.time.{Milliseconds, Time}
 import traffic.actors.LocationHandler.HandleLocation
 import traffic.model.Trip
+import traffic.protocol.RequestUpdateEvent
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
-class TripHandler(mcc: Int, mnc: Int, slide: Time) extends Actor with ActorLogging {
+class TripHandler(mcc: Int, mnc: Int, var slide: Time) extends Actor with ActorLogging {
 
     import TripHandler._
 
     val locationHandler = context.actorOf(LocationHandler.props(mcc, mnc))
 
-    val slideDuration: FiniteDuration = Duration(slide.millis, MILLISECONDS)
+    var slideDuration: FiniteDuration = Duration(slide.millis, MILLISECONDS)
 
     def continueTrip(trip: Trip): Unit =  {
         if (trip.distanceCovered >= trip.totalDistance) {
@@ -24,7 +25,6 @@ class TripHandler(mcc: Int, mnc: Int, slide: Time) extends Actor with ActorLoggi
             log.info("trip {}: finished", trip.bearerId)
 
             context.stop(self)
-
         }
         else {
             val slideDistance: Length = trip.velocity * slide
@@ -39,11 +39,22 @@ class TripHandler(mcc: Int, mnc: Int, slide: Time) extends Actor with ActorLoggi
         continueTrip(trip)
     }
 
+    def requestUpdate(update: RequestUpdateEvent) = {
+        update.slide match {
+            case Some(d) =>
+                slide = Milliseconds(d)
+                slideDuration = Duration(slide.millis, MILLISECONDS)
+            case None =>
+        }
+    }
+
     override def receive = {
         case StartTrip(trip) =>
             startTrip(trip)
         case ContinueTrip(trip) =>
             continueTrip(trip)
+        case update: RequestUpdateEvent =>
+            requestUpdate(update)
     }
 }
 

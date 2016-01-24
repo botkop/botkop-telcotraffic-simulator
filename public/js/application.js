@@ -110,6 +110,9 @@ function initialize() {
         value: 500,
         slide: function( event, ui ) {
             $( "#slideSize" ).val( ui.value );
+        },
+        change: function( event, ui ) {
+            socketUpdateSlide(ui.value);
         }
     });
 
@@ -122,11 +125,35 @@ function initialize() {
         value: 120,
         slide: function( event, ui ) {
             $( "#velocity" ).val( ui.value );
+        },
+        change: function( event, ui ) {
+            socketUpdateVelocity(ui.value);
         }
     });
 
     $( "#velocity" ).val( $( "#velocitySlider" ).slider( "value" ) );
+}
 
+function socketUpdateSlide(value) {
+    var requestUpdate = {
+        action: "update",
+        request: {
+            slide: value,
+            topic: "request-topic"
+        }
+    }
+    socket.send(JSON.stringify(requestUpdate));
+}
+
+function socketUpdateVelocity(value) {
+    var requestUpdate = {
+        action: "update",
+        request: {
+            velocity: value,
+            topic: "request-topic"
+        }
+    }
+    socket.send(JSON.stringify(requestUpdate));
 }
 
 function handleSubscriberEvent(subscriberEvent) {
