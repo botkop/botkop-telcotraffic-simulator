@@ -18,6 +18,8 @@ class TripHandler(mcc: Int, mnc: Int, var slide: Time) extends Actor with ActorL
 
     var slideDuration: FiniteDuration = Duration(slide.millis, MILLISECONDS)
 
+    var speedFactor: Double = 1.0
+
     def continueTrip(trip: Trip): Unit =  {
         if (trip.distanceCovered >= trip.totalDistance) {
             val nextTrip: Trip = Trip(trip, trip.totalDistance)
@@ -27,7 +29,7 @@ class TripHandler(mcc: Int, mnc: Int, var slide: Time) extends Actor with ActorL
             context.stop(self)
         }
         else {
-            val slideDistance: Length = trip.velocity * slide
+            val slideDistance: Length = (trip.velocity * speedFactor) * slide
             val nextTrip = Trip(trip, trip.distanceCovered + slideDistance)
             locationHandler ! HandleLocation(nextTrip)
             context.system.scheduler.scheduleOnce(slideDuration, self, ContinueTrip(nextTrip))
@@ -44,6 +46,12 @@ class TripHandler(mcc: Int, mnc: Int, var slide: Time) extends Actor with ActorL
             case Some(d) =>
                 slide = Milliseconds(d)
                 slideDuration = Duration(slide.millis, MILLISECONDS)
+            case None =>
+        }
+
+        update.velocity match {
+            case Some(d) =>
+                speedFactor = d / 120.0
             case None =>
         }
     }
