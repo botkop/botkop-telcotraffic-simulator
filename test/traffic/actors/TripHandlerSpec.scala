@@ -164,6 +164,32 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
 
         }
 
+        "allow dynamic slide update" in new WithApplication(FakeTestApp()) {
+
+            subscribe()
+
+            val trip = makeTrip()
+            val tripHandler = system.actorOf(TripHandler.props(mcc, mnc, slide))
+            tripHandler ! StartTrip(trip)
+            val update = RequestUpdateEvent(slide = Some(125.0), velocity = None)
+            tripHandler ! update
+
+            val events: Seq[SubscriberEvent] = receiveN(28, 2000.millis).flatMap {
+                case event: SubscriberEvent => Some(event)
+                case _ => None
+            }
+
+            tripHandler ! PoisonPill
+
+            val distance = trip.route.from.distanceFrom(events.last.location)
+            logger.info("distance covered: {}", distance.toString)
+
+            // this is a bit tricky, because we cannot know when the change becomes effective
+            // so we take a large margin
+            distance should be > 500.0
+
+        }
+
     }
 
 }
