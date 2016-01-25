@@ -15,7 +15,7 @@ import squants.motion.KilometersPerHour
 import squants.time.Milliseconds
 import traffic.FakeTestApp
 import traffic.model._
-import traffic.protocol.{CelltowerEvent, SubscriberEvent}
+import traffic.protocol.{RequestUpdateEvent, CelltowerEvent, SubscriberEvent}
 
 import scala.collection.immutable.Seq
 import scala.concurrent.duration._
@@ -113,6 +113,55 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
             logger.info(events.toString())
 
             events.last.location should be (LatLng(38.50579234464571,-120.2019746629474))
+
+        }
+
+        "cover a certain distance" in new WithApplication(FakeTestApp()) {
+
+            subscribe()
+
+            val trip = makeTrip()
+            val tripHandler = system.actorOf(TripHandler.props(mcc, mnc, slide))
+            tripHandler ! StartTrip(trip)
+
+            val events: Seq[SubscriberEvent] = receiveN(18, 2000.millis).flatMap {
+                case event: SubscriberEvent => Some(event)
+                case _ => None
+            }
+
+            tripHandler ! PoisonPill
+
+            val distance = trip.route.from.distanceFrom(events.last.location)
+            logger.info("distance covered: {}", distance.toString)
+
+            distance should be (667.0 +- 1.0)
+
+        }
+
+        "allow dynamic speed update" in new WithApplication(FakeTestApp()) {
+
+            subscribe()
+
+            val trip = makeTrip()
+            val tripHandler = system.actorOf(TripHandler.props(mcc, mnc, slide))
+            tripHandler ! StartTrip(trip)
+            val update = RequestUpdateEvent(slide = None, velocity = Some(12000.0))
+            tripHandler ! update
+
+            val events: Seq[SubscriberEvent] = receiveN(18, 2000.millis).flatMap {
+                case event: SubscriberEvent => Some(event)
+                case _ => None
+            }
+
+            tripHandler ! PoisonPill
+
+            val distance = trip.route.from.distanceFrom(events.last.location)
+            logger.info("distance covered: {}", distance.toString)
+
+            // this is a bit tricky, because we cannot know when the change becomes effective
+            // so we take a large margin
+            distance should be > 50000.0
+
         }
 
     }

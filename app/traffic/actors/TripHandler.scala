@@ -51,6 +51,7 @@ class TripHandler(mcc: Int, mnc: Int, var slide: Time) extends Actor with ActorL
 
         update.velocity match {
             case Some(d) =>
+                // note: this is a temporary solution until we implement variable speed per trip
                 speedFactor = d / 120.0
             case None =>
         }
