@@ -4,14 +4,14 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.{Publish, Subscribe}
 import play.api.libs.json.{JsValue, Json}
-import traffic.protocol.{CelltowerEvent, SubscriberEvent}
+import traffic.actors.SimulatorSocket.WebSocketEvent
 
 class SimulatorSocket(socket: ActorRef) extends Actor with ActorLogging {
 
     val mediator = DistributedPubSub(context.system).mediator
     mediator ! Subscribe("request-topic", self)
-    mediator ! Subscribe("subscriber-topic", self)
-    mediator ! Subscribe("celltower-topic", self)
+    mediator ! Subscribe("websocket-subscriber-topic", self)
+    mediator ! Subscribe("websocket-celltower-topic", self)
 
     override def receive: Receive = {
 
@@ -34,19 +34,17 @@ class SimulatorSocket(socket: ActorRef) extends Actor with ActorLogging {
             socket ! Json.stringify(request)
 
         /*
-        events emitted by simulator: pass them on to the sockets
-        TO DO: perhaps this should be moved to its own broker
+        events emitted by the webSocketBroker: pass them on to the sockets
+        note: these events will only appear when the WebSocketBroker has been activated in the configuration
         */
-        case event: SubscriberEvent =>
-            socket ! Json.stringify(Json.toJson(event))
-
-        case event: CelltowerEvent =>
-            socket ! Json.stringify(Json.toJson(event))
+        case WebSocketEvent(event) =>
+            socket ! event
 
     }
 }
 
 object SimulatorSocket {
     def props(socket: ActorRef) = Props(new SimulatorSocket(socket))
+    case class WebSocketEvent(event: String)
 }
 
