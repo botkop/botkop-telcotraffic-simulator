@@ -1,8 +1,13 @@
+//todo make websocket url dynamic
+// var websocketUrl = "@routes.Application.simulatorSocket.webSocketURL()";
+var websocketUrl = "ws://localhost:9000/simulator/socket";
+
 /* variables */
 var map;
 var subscribers = [];
 var celltowers = [];
 var subscriberToFollow;
+var celltowerCluster;
 
 /* constants */
 var connectedCellTowerIcon = imageFolder + "/cell-tower-green.png";
@@ -18,9 +23,7 @@ var mapOptions = {
     center: new google.maps.LatLng(40.69847032728747, -73.9514422416687) // NYC
 }
 
-//todo make websocket url dynamic
-// var websocketUrl = "@routes.Application.simulatorSocket.webSocketURL()";
-var websocketUrl = "ws://localhost:9000/simulator/socket";
+
 var socket = new WebSocket(websocketUrl);
 
 function startSimulator() {
@@ -88,6 +91,7 @@ function unfollow() {
 
 function initialize() {
     map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+
     /*
     UI handling
     */
@@ -101,6 +105,14 @@ function initialize() {
 
     $('#unfollowButton').click(function() {
         unfollow();
+    })
+
+    $('#showTowers').click(function() {
+        showTowers();
+    })
+
+    $('#hideTowers').click(function() {
+        hideTowers();
     })
 
     $( "#slideSizeSlider" ).slider({
@@ -165,7 +177,8 @@ function handleSubscriberEvent(subscriberEvent) {
         phoneMarker = new google.maps.Marker({
             map: map,
             icon: phoneIcon,
-            title: "" + id
+            title: "" + id,
+            zIndex: 10
         });
         subscribers[id] = phoneMarker;
 
@@ -178,6 +191,9 @@ function handleSubscriberEvent(subscriberEvent) {
     phoneMarker.setPosition(location);
     if (subscriberToFollow == phoneMarker) {
         map.panTo(location)
+        if (celltowerCluster != null) {
+            celltowerCluster.redraw();
+        }
     }
 
 }
@@ -192,6 +208,7 @@ function handleCelltowerEvent(celltowerEvent) {
         var marker = new google.maps.Marker({
             position: location,
             icon: connectedCellTowerIcon,
+            zIndex: 9,
             map: map
         });
         celltowers[bearerId] = marker;
@@ -199,6 +216,39 @@ function handleCelltowerEvent(celltowerEvent) {
     else {
         celltower.setPosition(location);
     }
+
+}
+
+function showTowers(){
+
+    mcc = parseInt($('#mcc').val());
+    mnc = parseInt($('#mnc').val());
+
+    cellTowerCluster = new MarkerClusterer(map, [], {gridSize: 50, maxZoom: 10});
+
+    var url = "/simulator/rest/celltowers/" + mcc + "/" + mnc;
+    $.getJSON(url, function(result){
+        var markers = [];
+        var bounds = new google.maps.LatLngBounds();
+        result.forEach(function (tower) {
+            var latlng = new google.maps.LatLng(tower.location.lat, tower.location.lng);
+            var marker = new google.maps.Marker({
+                position: latlng,
+                title: mcc + ':' + mnc + ':' + tower.radio + ":" + tower.area + ":" + tower.cell,
+                icon: disconnectedCellTowerIcon,
+                zIndex: 0
+            });
+            markers.push(marker);
+            bounds.extend(latlng);
+        });
+        cellTowerCluster.clearMarkers();
+        cellTowerCluster.addMarkers(markers);
+        map.fitBounds(bounds);
+    });
+
+}
+
+function hideTowers(){
 
 }
 

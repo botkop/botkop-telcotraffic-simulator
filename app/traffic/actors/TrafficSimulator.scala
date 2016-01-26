@@ -16,24 +16,27 @@ class TrafficSimulator() extends Actor with ActorLogging {
     val mediator = DistributedPubSub(context.system).mediator
     mediator ! Subscribe("request-topic", self)
 
+    var currentRequest: RequestEvent = _
+
     def startSimulation(json: JsValue) = {
 
-        val r = (json \ "request").as[RequestEvent]
+        currentRequest = (json \ "request").as[RequestEvent]
 
         // stop running simulation before starting a new one
         stopSimulation()
 
         log.info("starting simulation")
 
-        val slide = Milliseconds(r.slide)
-        val velocity = KilometersPerHour(r.velocity)
+        val slide = Milliseconds(currentRequest.slide)
+        val velocity = KilometersPerHour(currentRequest.velocity)
 
-        val tripHandlerPool =
-            context.actorOf(new BalancingPool(r.numTrips).props(TripHandler.props(r.mcc, r.mnc, slide)))
+        val tripHandlerPool = context.actorOf(
+            new BalancingPool(currentRequest.numTrips).props(
+                TripHandler.props(currentRequest.mcc, currentRequest.mnc, slide)))
 
         log.info("starting simulation")
-        for (i <- 1 to r.numTrips) {
-            val trip = Trip.random(r.mcc, r.mnc, velocity)
+        for (i <- 1 to currentRequest.numTrips) {
+            val trip = Trip.random(currentRequest.mcc, currentRequest.mnc, velocity)
             tripHandlerPool ! StartTrip(trip)
         }
     }

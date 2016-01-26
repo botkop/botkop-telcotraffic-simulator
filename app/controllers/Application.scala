@@ -12,6 +12,7 @@ import play.api.libs.json.Json
 import play.api.mvc._
 import traffic.actors.{SimulatorSocket, TrafficSimulator}
 import traffic.brokers.{MessageBroker, MessageProvider}
+import traffic.model.Celltower
 
 @Singleton
 class Application @Inject() (val system: ActorSystem) extends Controller with LazyLogging {
@@ -54,6 +55,11 @@ class Application @Inject() (val system: ActorSystem) extends Controller with La
         */
         mediator ! Publish("request-topic", request.body)
         Ok(Json.obj("status" -> "OK"))
+    }
+
+    def listCelltowers(mcc: Int, mnc: Int) = Action {
+        val celltowers = Celltower.getAll(mcc, mnc)
+        Ok(Json.toJson(celltowers))
     }
 
     /**

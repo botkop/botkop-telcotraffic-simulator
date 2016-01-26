@@ -4,6 +4,7 @@
 
 # REST interface
 POST     /simulator/rest/request          controllers.Application.restRequest
+GET      /simulator/rest/celltowers/:mcc/:mnc       controllers.Application.listCelltowers(mcc: Int, mnc: Int)
 
 # HTML interface
 GET      /simulator                       controllers.Application.simulatorPage
