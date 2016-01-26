@@ -47,6 +47,10 @@ function startSimulator() {
 
     console.log("sending request to socket: " + json);
     socket.send(json);
+
+    if ($('#showTowers').prop('checked')){
+        showTowers();
+    }
 };
 
 function stopSimulator() {
@@ -91,29 +95,30 @@ function unfollow() {
 
 function initialize() {
     map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
-
+    celltowerCluster = new MarkerClusterer(map, [], {gridSize: 50, maxZoom: 10});
     /*
     UI handling
     */
     $('#startButton').click(function() {
         startSimulator();
-    })
+    });
 
     $('#stopButton').click(function() {
         stopSimulator();
-    })
+    });
 
     $('#unfollowButton').click(function() {
         unfollow();
-    })
+    });
 
-    $('#showTowers').click(function() {
-        showTowers();
-    })
-
-    $('#hideTowers').click(function() {
-        hideTowers();
-    })
+    $('#showTowers').change(function() {
+        if (this.checked) {
+            showTowers();
+        }
+        else {
+            hideTowers();
+        }
+    });
 
     $( "#slideSizeSlider" ).slider({
         min: 100,
@@ -191,9 +196,7 @@ function handleSubscriberEvent(subscriberEvent) {
     phoneMarker.setPosition(location);
     if (subscriberToFollow == phoneMarker) {
         map.panTo(location)
-        if (celltowerCluster != null) {
-            celltowerCluster.redraw();
-        }
+        celltowerCluster.redraw();
     }
 
 }
@@ -224,7 +227,10 @@ function showTowers(){
     mcc = parseInt($('#mcc').val());
     mnc = parseInt($('#mnc').val());
 
-    cellTowerCluster = new MarkerClusterer(map, [], {gridSize: 50, maxZoom: 10});
+    if (isNaN(mcc) || isNaN(mnc)) {
+        console.log("invalid mcc or mnc");
+        return;
+    }
 
     var url = "/simulator/rest/celltowers/" + mcc + "/" + mnc;
     $.getJSON(url, function(result){
@@ -234,22 +240,25 @@ function showTowers(){
             var latlng = new google.maps.LatLng(tower.location.lat, tower.location.lng);
             var marker = new google.maps.Marker({
                 position: latlng,
-                title: mcc + ':' + mnc + ':' + tower.radio + ":" + tower.area + ":" + tower.cell,
+                title: mcc + ':' + mnc + ':' + tower.area + ":" + tower.cell,
                 icon: disconnectedCellTowerIcon,
                 zIndex: 0
             });
             markers.push(marker);
             bounds.extend(latlng);
         });
-        cellTowerCluster.clearMarkers();
-        cellTowerCluster.addMarkers(markers);
+
         map.fitBounds(bounds);
+
+        celltowerCluster.clearMarkers();
+        celltowerCluster.addMarkers(markers);
     });
 
 }
 
 function hideTowers(){
-
+    console.log("clearing celltower cluster")
+    celltowerCluster.clearMarkers();
 }
 
 google.maps.event.addDomListener(window, 'load', initialize);

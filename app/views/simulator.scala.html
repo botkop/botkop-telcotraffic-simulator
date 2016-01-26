@@ -4,10 +4,10 @@
 
     <div id="selection-area">
             <label for="mcc">MCC:</label>
-            <input type="text" id="mcc"/>
+            <input type="text" id="mcc" value="206"/>
 
             <label for="mnc">MNC:</label>
-            <input type="text" id="mnc">
+            <input type="text" id="mnc" value="20">
 
             <label for="numTrips">#Trips:</label>
             <input type="text" id="numTrips" value="2">
@@ -24,12 +24,13 @@
             <div id="velocitySlider"></div>
             <p>
 
+            <input type="checkbox" id="showTowers" checked><label for="showTowers">Show towers</label>
+            <p>
+
             <button id="startButton">Start</button>
             <button id="stopButton">Stop</button>
             <button id="unfollowButton">Unfollow</button>
 
-            <button id="showTowers">Show celltowers</button>
-            <button id="hideTowers">Hide celltowers</button>
     </div>
 
     <div id="map-canvas"></div>
