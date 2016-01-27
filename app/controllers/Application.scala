@@ -83,6 +83,8 @@ class Application @Inject() (val system: ActorSystem) extends Controller with La
       * Socket for HTTP clients
       */
     def simulatorSocket() = WebSocket.acceptWithActor[String, String] { req => out =>
+        logger.debug("establishing connection to websocket")
+
         SimulatorSocket.props(out)
     }
 

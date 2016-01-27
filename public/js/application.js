@@ -23,8 +23,7 @@ var mapOptions = {
     center: new google.maps.LatLng(40.69847032728747, -73.9514422416687) // NYC
 }
 
-
-var socket = new WebSocket(websocketUrl);
+var socket;
 
 function startSimulator() {
     /* force these values to be numeric, otherwise json will contain strings */
@@ -61,11 +60,17 @@ function stopSimulator() {
 /*
 Web socket triggers
 */
-socket.onopen = function(msg) {
-    console.log("web socket opened")
+
+var socketOnOpen = function(msg) {
+    console.log("websocket opened")
 };
 
-socket.onmessage = function(msg) {
+var socketOnClose = function(msg) {
+    console.log('websocket disconnected - waiting for connection');
+    websocketWaiter();
+}
+
+var socketOnMessage = function(msg) {
     var event = JSON.parse(msg.data);
     if (event.topic == "subscriber-topic") {
         handleSubscriberEvent(event);
@@ -83,9 +88,14 @@ socket.onmessage = function(msg) {
     console.log("websocket received unknown message: " + JSON.stringify(msg.data));
 };
 
-socket.onclose = function(msg) {
-    console.log('Disconnected - see error log for more information');
-};
+function websocketWaiter(){
+    setTimeout(function(){
+        socket = new WebSocket(websocketUrl);
+        socket.onopen = socketOnOpen;
+        socket.onclose = socketOnClose;
+        socket.onmessage = socketOnMessage;
+    }, 1000);
+}
 
 /* methods */
 function unfollow() {
@@ -94,6 +104,7 @@ function unfollow() {
 }
 
 function initialize() {
+    websocketWaiter();
     map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
     celltowerCluster = new MarkerClusterer(map, [], {gridSize: 50, maxZoom: 10});
     /*
