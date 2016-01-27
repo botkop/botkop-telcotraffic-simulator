@@ -2,8 +2,7 @@ package traffic.brokers
 
 import java.util.Properties
 
-import akka.actor.Actor.Receive
-import org.apache.kafka.clients.producer.{ProducerRecord, KafkaProducer}
+import org.apache.kafka.clients.producer.{KafkaProducer, ProducerRecord}
 import play.api.Configuration
 
 class KafkaBroker extends MessageBroker {

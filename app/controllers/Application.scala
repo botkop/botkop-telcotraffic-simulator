@@ -1,5 +1,6 @@
 package controllers
 
+import java.util
 import javax.inject.{Inject, Singleton}
 
 import akka.actor.ActorSystem
@@ -14,57 +15,65 @@ import traffic.actors.{SimulatorSocket, TrafficSimulator}
 import traffic.brokers.{MessageBroker, MessageProvider}
 import traffic.model.Celltower
 
+import scala.collection.JavaConversions._
+
 @Singleton
 class Application @Inject() (val system: ActorSystem) extends Controller with LazyLogging {
 
     val mediator = DistributedPubSub(system).mediator
 
-    val broker = initBroker()
+    initBrokers()
 
     val trafficSimulator = system.actorOf(TrafficSimulator.props(), "traffic-simulator")
 
     /**
-      * initialize message broker
-      * @return
+      * initialize message brokers
       */
-    def initBroker() = {
+    def initBrokers() = {
         val conf = current.configuration
-        val brokerName: String = conf.getString("messageBroker").get
-        val brokerConfig: Configuration = conf.getConfig(brokerName).get
-        val clazzName = brokerConfig.getString("class").get
 
-        val broker = Class.forName(clazzName).newInstance.asInstanceOf[MessageBroker]
+        val brokers = conf.getStringList("messageBrokers")
+            .getOrElse(new util.ArrayList[String]())
+            .map { brokerName =>
 
-        brokerConfig.getConfig("properties") match {
-            case Some(properties) =>
-                broker.configure(properties)
-            case _ =>
-        }
+                val brokerConfig: Configuration = conf.getConfig(brokerName).get
+                val clazzName = brokerConfig.getString("class").get
 
-        system.actorOf(MessageProvider.props(broker))
+                val broker = Class.forName(clazzName).newInstance.asInstanceOf[MessageBroker]
+
+                brokerConfig.getConfig("properties") match {
+                    case Some(properties) =>
+                        broker.configure(properties)
+                    case _ =>
+                }
+
+                broker
+            }.toList
+
+        system.actorOf(MessageProvider.props(brokers))
     }
 
     /**
-      * handle REST requests
-      * @return
+      * handle request from REST interface
+      * publish to mediator
+      * @return Ok
       */
     def restRequest = Action(BodyParsers.parse.json) { request =>
-        /*
-        received from REST interface
-        publish to mediator
-        */
         mediator ! Publish("request-topic", request.body)
         Ok(Json.obj("status" -> "OK"))
     }
 
+    /**
+      * REST request to obtain list of celltowers for mcc and mnc
+      * Retrieve all celltowers and return as json to requester
+      */
     def listCelltowers(mcc: Int, mnc: Int) = Action {
         val celltowers = Celltower.getAll(mcc, mnc)
         Ok(Json.toJson(celltowers))
     }
 
     /**
-      * Handle HTTP requests
-      * @return
+      * Handle HTTP request: show home page
       */
     def simulatorPage() = Action { implicit request =>
         Ok(views.html.simulator(request))
@@ -72,7 +81,6 @@ class Application @Inject() (val system: ActorSystem) extends Controller with La
 
     /**
       * Socket for HTTP clients
-      * @return
       */
     def simulatorSocket() = WebSocket.acceptWithActor[String, String] { req => out =>
         SimulatorSocket.props(out)

@@ -9,26 +9,29 @@ import traffic.actors.SimulatorSocket.WebSocketEvent
 class SimulatorSocket(socket: ActorRef) extends Actor with ActorLogging {
 
     val mediator = DistributedPubSub(context.system).mediator
+
+    // subscribe to requests coming from REST or HTML interfaces
     mediator ! Subscribe("request-topic", self)
+
+    // subscribe to events published by the WebSocketBroker
+    // note: these events will only appear when the WebSocketBroker has been activated in the configuration
     mediator ! Subscribe("websocket-subscriber-topic", self)
     mediator ! Subscribe("websocket-celltower-topic", self)
 
-    override def receive: Receive = {
 
+    override def receive: Receive = {
         /*
         received from web ui
         transform to json and send to mediator
         */
         case message: String =>
-            log.debug("received message: {}", message)
-
+            log.debug("received request: {}", message)
             val json: JsValue = Json.parse(message)
-            // to do: perhaps this can be published imnediately to the traffic simulator
             mediator ! Publish("request-topic", json)
 
         /*
         received from mediator
-        stringify and publish to all active web sockets
+        stringify and publish to all active web sockets, so the browsers can update their state
         */
         case request: JsValue =>
             socket ! Json.stringify(request)

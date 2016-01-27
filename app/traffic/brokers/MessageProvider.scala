@@ -6,7 +6,7 @@ import akka.cluster.pubsub.DistributedPubSubMediator.Subscribe
 import play.api.libs.json.Json
 import traffic.protocol.{CelltowerEvent, SubscriberEvent}
 
-class MessageProvider(broker: MessageBroker) extends Actor {
+class MessageProvider(brokers: List[MessageBroker]) extends Actor {
 
     val mediator = DistributedPubSub(context.system).mediator
 
@@ -15,15 +15,15 @@ class MessageProvider(broker: MessageBroker) extends Actor {
 
     override def receive: Receive = {
         case event: SubscriberEvent =>
-            broker.send(event.topic, Json.stringify(Json.toJson(event)))
+            val message = Json.stringify(Json.toJson(event))
+            brokers.foreach(_.send(event.topic, message))
         case event: CelltowerEvent =>
-            broker.send(event.topic, Json.stringify(Json.toJson(event)))
+            val message = Json.stringify(Json.toJson(event))
+            brokers.foreach(_.send(event.topic, message))
     }
-
 }
 
 object MessageProvider {
-    def props(broker: MessageBroker) = Props(new MessageProvider(broker))
+    def props(brokers: List[MessageBroker]) = Props(new MessageProvider(brokers))
 }
-
 
