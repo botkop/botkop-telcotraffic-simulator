@@ -74,8 +74,17 @@ google.api.key=YOUR_API_KEY
 Before starting the application, please verify the settings in conf/application.conf.
 
 To start the application, execute
-./activator run
+./activator run -Dhttp.port=9000 -Dakka.remote.netty.tcp.port=2552
 in the root of the checked out code.
+
+To start a second node, and run the application as a cluster, execute
+./activator run -Dhttp.port=9001 -Dakka.remote.netty.tcp.port=0
+
+For detailed cluster configuration, see the akka documentation at
+http://doc.akka.io/docs/akka/2.4.1/scala/cluster-usage.html
+and the file
+conf/application.conf
+
 
 TODO
 ----
