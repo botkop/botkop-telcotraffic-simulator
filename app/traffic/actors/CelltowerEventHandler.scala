@@ -30,7 +30,9 @@ class CelltowerEventHandler(celltower: Celltower, template: CelltowerTemplate) e
     }
 
     override def receive: Receive = {
-        case EmitCelltowerEvent(bearerId) => emitEvent(bearerId)
+        case EmitCelltowerEvent(bearerId) =>
+            log.debug("emitting event for {}", bearerId)
+            emitEvent(bearerId)
     }
 
 }

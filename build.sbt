@@ -31,9 +31,6 @@ libraryDependencies ++= Seq(
 )
 
 resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
-// resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
-// resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
-// resolvers += "Typesafe Snapshots" at "http://repo.typesafe.com/typesafe/snapshots/"
 
 // Play provides two styles of routers, getOne expects its actions to be injected, the
 // other, legacy style, accesses its actions statically.

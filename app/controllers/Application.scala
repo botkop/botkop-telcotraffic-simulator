@@ -3,9 +3,10 @@ package controllers
 import java.util
 import javax.inject.{Inject, Singleton}
 
-import akka.actor.ActorSystem
+import akka.actor.{PoisonPill, ActorSystem}
 import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.Publish
+import akka.cluster.singleton.{ClusterSingletonProxy, ClusterSingletonProxySettings, ClusterSingletonManager, ClusterSingletonManagerSettings}
 import com.typesafe.scalalogging.LazyLogging
 import play.api.Configuration
 import play.api.Play.current
@@ -24,7 +25,18 @@ class Application @Inject() (val system: ActorSystem) extends Controller with La
 
     initBrokers()
 
-    val trafficSimulator = system.actorOf(TrafficSimulator.props(), "traffic-simulator")
+    // val trafficSimulator = system.actorOf(TrafficSimulator.props(), "traffic-simulator")
+
+    system.actorOf(ClusterSingletonManager.props(
+        singletonProps = TrafficSimulator.props(),
+        terminationMessage = PoisonPill,
+        settings = ClusterSingletonManagerSettings(system).withRole("simulate")),
+        name = "TrafficSimulator")
+
+    system.actorOf(ClusterSingletonProxy.props(
+        singletonManagerPath = "/user/TrafficSimulator",
+        settings = ClusterSingletonProxySettings(system).withRole("simulate")),
+        name = "TrafficSimulatorProxy")
 
     /**
       * initialize message brokers
@@ -50,7 +62,18 @@ class Application @Inject() (val system: ActorSystem) extends Controller with La
                 broker
             }.toList
 
-        system.actorOf(MessageProvider.props(brokers))
+        system.actorOf(ClusterSingletonManager.props(
+            singletonProps = MessageProvider.props(brokers),
+            terminationMessage = PoisonPill,
+            settings = ClusterSingletonManagerSettings(system).withRole("publish")),
+            name = "TrafficBroker")
+
+        system.actorOf(ClusterSingletonProxy.props(
+            singletonManagerPath = "/user/TrafficBroker",
+            settings = ClusterSingletonProxySettings(system).withRole("publish")),
+            name = "TrafficBrokerProxy")
+
+        // system.actorOf(MessageProvider.props(brokers))
     }
 
     /**

@@ -1,8 +1,8 @@
 package traffic.actors
 
 import akka.actor.{Actor, ActorLogging, Props}
+import akka.routing.ConsistentHashingRouter.ConsistentHashable
 import squants._
-import squants.time.Milliseconds
 import traffic.actors.LocationHandler.HandleLocation
 import traffic.model.Trip
 import traffic.protocol.RequestUpdateEvent
@@ -66,13 +66,19 @@ class TripHandler() extends Actor with ActorLogging {
             continueTrip(trip)
         case update: RequestUpdateEvent =>
             requestUpdate(update)
+        case StopTrip =>
+            context.stop(self)
     }
 }
 
 object TripHandler {
 
-    case class StartTrip(trip: Trip)
+    case class StartTrip(trip: Trip) extends ConsistentHashable {
+        override def consistentHashKey: Any = trip.bearerId
+    }
+
     case class ContinueTrip(trip: Trip)
+    case object StopTrip
 
     def props (): Props = {
         Props(new TripHandler())
