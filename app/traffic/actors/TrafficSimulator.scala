@@ -3,7 +3,8 @@ package traffic.actors
 import akka.actor.{Actor, ActorLogging, Props}
 import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.Subscribe
-import akka.routing.FromConfig
+import akka.cluster.routing.{ClusterRouterPool, ClusterRouterPoolSettings}
+import akka.routing.{ConsistentHashingPool, FromConfig}
 import play.api.libs.json.{JsValue, Json}
 import squants.motion.KilometersPerHour
 import squants.time.Milliseconds
@@ -18,9 +19,11 @@ class TrafficSimulator() extends Actor with ActorLogging {
 
     var currentRequest: RequestEvent = _
 
-    // val tripHandlerPool = context.actorOf(FromConfig.props(Props[TripHandler]), name = "TripRouter")
-    // lazy val tripHandlerPool = context.actorOf(new BalancingPool(10).props(TripHandler.props()))
 
+    // get router configuration from config file
+    val routerProps = FromConfig.props(Props[TripHandler])
+
+    // alternatively we could code it:
     /*
     val settings = ClusterRouterPoolSettings(
         totalInstances = 10,
@@ -29,9 +32,9 @@ class TrafficSimulator() extends Actor with ActorLogging {
         useRole = Some("simulate"))
 
     val pool = ClusterRouterPool(ConsistentHashingPool(0), settings)
-    */
 
-    val routerProps = FromConfig.props(Props[TripHandler])
+    val router = context.actorOf(pool.props(Props[TripHandler]))
+    */
 
     def startSimulation(json: JsValue) = {
 
@@ -45,27 +48,15 @@ class TrafficSimulator() extends Actor with ActorLogging {
         val slide = Milliseconds(currentRequest.slide)
         val velocity = KilometersPerHour(currentRequest.velocity)
 
-        // val tripHandlerPool = context.actorOf( new BalancingPool(currentRequest.numTrips).props(TripHandler.props()))
-
-        /*
-        val tripHandlerPool = context.actorOf(
-            ClusterRouterPool(ConsistentHashingPool(0),
-            ClusterRouterPoolSettings(
-                totalInstances = 100, maxInstancesPerNode = 3,
-                allowLocalRoutees = true, useRole = Some("simulate"))).props(Props[TripHandler])
-            , name = "tripRouter"
-            )
-        */
-
-        // val tripHandlerPool = context.actorOf(pool.props(Props[TripHandler]), name = "tripRouter")
-
-        val tripHandlerPool = context.actorOf(routerProps, "TripRouter")
+        // still do not understand why we can re-use the name of this actor
+        // (in most cases)
+        // also don't understand why declaring the router globally in the class does not work
+        val router = context.actorOf(routerProps, "TripRouter")
 
         log.info("starting simulation")
         for (i <- 1 to currentRequest.numTrips) {
             val trip = Trip.random(currentRequest.mcc, currentRequest.mnc, velocity, slide)
-            // tripHandlerPool ! ConsistentHashableEnvelope(StartTrip(trip), trip.bearerId)
-            tripHandlerPool ! StartTrip(trip)
+            router ! StartTrip(trip)
         }
 
     }
@@ -73,14 +64,14 @@ class TrafficSimulator() extends Actor with ActorLogging {
     def stopSimulation() = {
         log.info("stopping simulation")
         context.children.foreach(context.stop)
-        // tripHandlerPool ! Broadcast(StopTrip)
     }
 
     def updateSimulation(json: JsValue) = {
         val r = (json \ "request").as[RequestUpdateEvent]
         log.info("request update event: " + r.toString)
+
+        // should probably use a Broadcast here
         context.children.foreach(_ ! r)
-        // tripHandlerPool ! Broadcast(r)
     }
 
     def interpreteRequest(json: JsValue) = {
