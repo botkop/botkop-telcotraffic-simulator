@@ -5,12 +5,12 @@ import traffic.actors.CelltowerLocationHandler.HandleCelltowerLocation
 import traffic.actors.SubscriberEventHandler.HandleSubscriberEvent
 import traffic.model.Trip
 
-class LocationHandler(mcc: Int, mnc: Int) extends Actor {
+class LocationHandler() extends Actor {
 
     import LocationHandler._
 
     val subscriberLocationHandler: ActorRef = context.actorOf(SubscriberEventHandler.props())
-    val celltowerLocationHandler: ActorRef = context.actorOf(CelltowerLocationHandler.props(mcc, mnc))
+    val celltowerLocationHandler: ActorRef = context.actorOf(CelltowerLocationHandler.props())
 
     override def receive: Receive = {
 
@@ -23,6 +23,6 @@ class LocationHandler(mcc: Int, mnc: Int) extends Actor {
 }
 
 object LocationHandler {
-    def props(mcc: Int, mnc: Int) = Props(new LocationHandler(mcc, mnc))
+    def props() = Props(new LocationHandler())
     case class HandleLocation(trip: Trip)
 }

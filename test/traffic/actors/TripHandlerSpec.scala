@@ -12,7 +12,7 @@ import play.api.test.WithApplication
 import play.libs.Akka
 import squants.Velocity
 import squants.motion.KilometersPerHour
-import squants.time.Milliseconds
+import squants.time.{Time, Milliseconds}
 import traffic.FakeTestApp
 import traffic.model._
 import traffic.protocol.{RequestUpdateEvent, CelltowerEvent, SubscriberEvent}
@@ -41,12 +41,12 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
 
     val mcc = 206
     val mnc = 10
-    val slide = Milliseconds(250)
+    val slide: Time = Milliseconds(250)
 
     def makeTrip(kmh: Double = 1200): Trip = {
         val route = Route("_p~iF~ps|U_ulLnnqC_mqNvxq`@")
         val velocity: Velocity = KilometersPerHour(kmh)
-        Trip(sub, route, velocity)
+        Trip(mcc, mnc, sub, route, velocity, slide)
     }
 
     def subscribe() = {
@@ -75,9 +75,9 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
             subscribe()
 
             val route = "_zpvHkvvUpA@HcCsLaB_AKQAs@SCcFAkA?mB@OTc@HM~@e@tDiB`BaAnGaDdDaBh@YFKh@[d@i@z@{A`@gA\\w@^m@d@k@d@a@vIoE~IuE|QoJjG}CpCiAxAa@t@MrAKnACf@@hAHjAPt@PfA\\`ChA~CnBrKlHzPpLdFhDrGxDVFf@ZhDlBhK~F|GzD~ErCnI|EfCzA^^\\f@\\~@Lj@b@hEdAzJNzBJfB@xAIdDUbDEn@@h@yBnOaClPaFd]wBpN_RjlAeEtXuC~QwBlMoDlRqDrRiMbq@uNpu@wHda@}Gd^yCtO}CtPyA|HaH`^mMvq@iG~[iGf\\iCpNkBvLuB|OuCpTkHri@_WpmBmNdfAyNxgA_Hbh@eE~[eMphAaHfn@q@zFmA~KqB`QeDtYuAlMgMniAyItv@mEj\\cXzpBc]bgCiDbVsA|HuChOyD~P[nBiAlEaCvIsPnj@_Vbx@k}@lzCuGnTuF|QgE|NwHlW{GxTcNhe@oe@h`BoEvOgA~DkAzE_BvHgEbUmCtN}DhTcW`uAmTfkAmRtdA{i@nxCubA`qF}VduAa@rBcCvM_CdLeB~G{BdIiCfIgBbFoC`HyBdF_FhKuP~]mHtOcCzFmBfFaBtEiBzFwAdF{@bDaAvDaCxKSbAm@`DoArHmBdNe@bEqBbQy@fHgSdfBkPbwAm@xE}A`LmBfMyBfMqC|NqErSiJ|_@uHd[gMlh@aL`e@wUz`AwTd~@}B|JmDrQiAxGwCxScAvI{E|b@mAtM{@vJc@|F]~HGlDAbGHzFHhCHnB^rFb@lEr@dF`ArFxEzUpD`RJh@x@lEzCzRv@rGrPbmAbClQjOvgAhBpKnAjGlAdFnB`H`EbNlTpt@|BfIdBhHv@nDdA|FjAnHbAxHx@vHxAfQdKvrAnMjaBvBzTdAhJvBrPzCvRzArI~BvLfEpRXjArArFfCrJ~Ojj@|@pC`DfL~AnFDt@Lh@T|AD~@Ez@O~@Sh@[b@m@^e@Dg@Ga@Y]g@Si@]eAEg@Cm@@a@Lw@dEmI|@aBnCkF`A}ATa@h@eArB{DnCuFb@qAfKaSTY|AuCzCeGnDeHpNqXxQo]h[{l@`i@ccA|Ra_@LKlA_CTa@f@x@jB~EpGrP~@vCb@EvGaCx@OJILMrDcGbBsC~BsDnB_DlAsA`@]nAw@fCsA|DkAxCe@"
-            val trip = Trip(sub, Route(route), KilometersPerHour(120))
+            val trip = Trip(mcc, mnc, sub, Route(route), KilometersPerHour(120), slide)
 
-            val tripHandler = system.actorOf(TripHandler.props(mcc, mnc, slide))
+            val tripHandler = system.actorOf(TripHandler.props())
             tripHandler ! StartTrip(trip)
 
             val events: Seq[CelltowerEvent] = receiveN(18, 2000.millis).flatMap {
@@ -100,7 +100,7 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
             subscribe()
 
             val trip = makeTrip()
-            val tripHandler = system.actorOf(TripHandler.props(mcc, mnc, slide))
+            val tripHandler = system.actorOf(TripHandler.props())
             tripHandler ! StartTrip(trip)
 
             val events: Seq[SubscriberEvent] = receiveN(18, 2000.millis).flatMap {
@@ -121,7 +121,7 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
             subscribe()
 
             val trip = makeTrip()
-            val tripHandler = system.actorOf(TripHandler.props(mcc, mnc, slide))
+            val tripHandler = system.actorOf(TripHandler.props())
             tripHandler ! StartTrip(trip)
 
             val events: Seq[SubscriberEvent] = receiveN(18, 2000.millis).flatMap {
@@ -143,7 +143,7 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
             subscribe()
 
             val trip = makeTrip()
-            val tripHandler = system.actorOf(TripHandler.props(mcc, mnc, slide))
+            val tripHandler = system.actorOf(TripHandler.props())
             tripHandler ! StartTrip(trip)
             val update = RequestUpdateEvent(slide = None, velocity = Some(12000.0))
             tripHandler ! update
@@ -169,11 +169,12 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
             subscribe()
 
             val trip = makeTrip()
-            val tripHandler = system.actorOf(TripHandler.props(mcc, mnc, slide))
-            tripHandler ! StartTrip(trip)
+            val tripHandler = system.actorOf(TripHandler.props())
             val update = RequestUpdateEvent(slide = Some(125.0), velocity = None)
+            tripHandler ! StartTrip(trip)
             tripHandler ! update
 
+            // receiving 28 messages is already a test
             val events: Seq[SubscriberEvent] = receiveN(28, 2000.millis).flatMap {
                 case event: SubscriberEvent => Some(event)
                 case _ => None
@@ -184,9 +185,8 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
             val distance = trip.route.from.distanceFrom(events.last.location)
             logger.info("distance covered: {}", distance.toString)
 
-            // this is a bit tricky, because we cannot know when the change becomes effective
-            // so we take a large margin
-            distance should be > 500.0
+            logger.info("number of subscriber events: {}", events.length.toString)
+            events.length should be (13)
 
         }
 

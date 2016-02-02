@@ -2,7 +2,7 @@ package traffic.actors
 
 import akka.actor.{Actor, ActorLogging, Props}
 import squants._
-import squants.time.{Milliseconds, Time}
+import squants.time.Milliseconds
 import traffic.actors.LocationHandler.HandleLocation
 import traffic.model.Trip
 import traffic.protocol.RequestUpdateEvent
@@ -10,14 +10,13 @@ import traffic.protocol.RequestUpdateEvent
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
-class TripHandler(mcc: Int, mnc: Int, var slide: Time) extends Actor with ActorLogging {
+class TripHandler() extends Actor with ActorLogging {
 
     import TripHandler._
 
-    val locationHandler = context.actorOf(LocationHandler.props(mcc, mnc))
+    val locationHandler = context.actorOf(LocationHandler.props())
 
-    var slideDuration: FiniteDuration = Duration(slide.millis, MILLISECONDS)
-
+    var slideFactor: Double = 1.0
     var speedFactor: Double = 1.0
 
     def continueTrip(trip: Trip): Unit =  {
@@ -29,9 +28,12 @@ class TripHandler(mcc: Int, mnc: Int, var slide: Time) extends Actor with ActorL
             context.stop(self)
         }
         else {
+            val slide = trip.slide * slideFactor
+            val slideDuration = Duration(slide.millis, MILLISECONDS)
             val slideDistance: Length = (trip.velocity * speedFactor) * slide
             val nextTrip = Trip(trip, trip.distanceCovered + slideDistance)
             locationHandler ! HandleLocation(nextTrip)
+
             context.system.scheduler.scheduleOnce(slideDuration, self, ContinueTrip(nextTrip))
         }
     }
@@ -44,14 +46,14 @@ class TripHandler(mcc: Int, mnc: Int, var slide: Time) extends Actor with ActorL
     def requestUpdate(update: RequestUpdateEvent) = {
         update.slide match {
             case Some(d) =>
-                slide = Milliseconds(d)
-                slideDuration = Duration(slide.millis, MILLISECONDS)
+                // TODO: fix hardcoding
+                slideFactor = d / 500.0
             case None =>
         }
 
         update.velocity match {
             case Some(d) =>
-                // note: this is a temporary solution until we implement variable speed per trip
+                // TODO: this is a temporary solution until we implement variable speed per trip
                 speedFactor = d / 120.0
             case None =>
         }
@@ -72,8 +74,8 @@ object TripHandler {
     case class StartTrip(trip: Trip)
     case class ContinueTrip(trip: Trip)
 
-    def props (mcc: Int, mnc: Int, slide: Time): Props = {
-        Props(new TripHandler(mcc, mnc, slide))
+    def props (): Props = {
+        Props(new TripHandler())
     }
 }
 

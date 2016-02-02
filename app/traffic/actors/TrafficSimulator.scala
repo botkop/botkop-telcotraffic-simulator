@@ -31,12 +31,11 @@ class TrafficSimulator() extends Actor with ActorLogging {
         val velocity = KilometersPerHour(currentRequest.velocity)
 
         val tripHandlerPool = context.actorOf(
-            new BalancingPool(currentRequest.numTrips).props(
-                TripHandler.props(currentRequest.mcc, currentRequest.mnc, slide)))
+            new BalancingPool(currentRequest.numTrips).props(TripHandler.props()))
 
         log.info("starting simulation")
         for (i <- 1 to currentRequest.numTrips) {
-            val trip = Trip.random(currentRequest.mcc, currentRequest.mnc, velocity)
+            val trip = Trip.random(currentRequest.mcc, currentRequest.mnc, velocity, slide)
             tripHandlerPool ! StartTrip(trip)
         }
     }
