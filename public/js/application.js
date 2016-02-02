@@ -1,6 +1,3 @@
-//todo make websocket url dynamic
-// var websocketUrl = "@routes.Application.simulatorSocket.webSocketURL()";
-var websocketUrl = "ws://localhost:9000/simulator/socket";
 
 /* variables */
 var map;

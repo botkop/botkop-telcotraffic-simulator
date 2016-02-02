@@ -1,58 +1,62 @@
-@(title: String)(content: Html)
+@(title: String)(content: Html)(implicit request: RequestHeader)
+
 
 <!DOCTYPE html>
 
 <html lang="en">
-    <head>
-        <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
-        <meta charset="utf-8">
-        <title>@title</title>
-        <link rel="stylesheet" type="text/css" href='@routes.Assets.versioned("js/jquery-ui.min.css")'>
-        <style>
-            html, body, #map-canvas {
-                margin: 0px;
-                padding: 0px
-            }
+<head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>@title</title>
+    <link rel="stylesheet" type="text/css" href='@routes.Assets.versioned("js/jquery-ui.min.css")'>
+    <style>
+        html, body, #map-canvas {
+        margin: 0px;
+        padding: 0px
+        }
 
-            body {
-                font: 60% "Trebuchet MS", sans-serif;
-                color: white;
-            }
+        body {
+        font: 60% "Trebuchet MS", sans-serif;
+        color: white;
+        }
 
-            #map-canvas {
-                position: absolute;
-                height: 100%;
-                width: 100%;
-                top: 0px;
-                left: 0px;
-            }
+        #map-canvas {
+        position: absolute;
+        height: 100%;
+        width: 100%;
+        top: 0px;
+        left: 0px;
+        }
 
-            #selection-area {
-                position: absolute;
-                top: 10%;
-                width: 10%;
-                left: 1em;
-                height: 100px;
-                background-color: transparent;
-                z-index: 1;
-                text-align: left;
-                /*
-                border: white 1px solid;
-                */
-            }
+        #selection-area {
+        position: absolute;
+        top: 10%;
+        width: 10%;
+        left: 1em;
+        height: 100px;
+        background-color: transparent;
+        z-index: 1;
+        text-align: left;
+        /*
+        border: white 1px solid;
+        */
+        }
 
-        </style>
-        <script src='@routes.Assets.versioned("js/external/jquery/jquery.js")'></script>
-        <script src='@routes.Assets.versioned("js/jquery-ui.min.js")'></script>
-        <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing"></script>
-        <script src='@routes.Assets.versioned("js/markerclusterer.js")'></script>
-    </head>
-    <body>
-        @content
-    </body>
-    <script>
+    </style>
+    <script src='@routes.Assets.versioned("js/external/jquery/jquery.js")'></script>
+    <script src='@routes.Assets.versioned("js/jquery-ui.min.js")'></script>
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing"></script>
+    <script src='@routes.Assets.versioned("js/markerclusterer.js")'></script>
+</head>
+<body>
+@content
+</body>
+<script>
         var imageFolder = '@routes.Assets.versioned("images/")';
         console.log(imageFolder);
+
+        var websocketUrl = "@routes.Application.simulatorSocket.webSocketURL()";
+        console.log(websocketUrl);
     </script>
-    <script src='@routes.Assets.versioned("js/application.js")'></script>
+<script src='@routes.Assets.versioned("js/application.js")'></script>
 </html>
