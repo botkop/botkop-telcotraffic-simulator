@@ -86,6 +86,25 @@ http://doc.akka.io/docs/akka/2.4.1/scala/cluster-usage.html
 and the file
 conf/application.conf
 
+Building a production distribution
+----------------------------------
+Prerequisites: the traffic database has been created
+In the root of the checked out code, execute: 
+
+./activator clean universal:packageZipTarball
+
+After a while, the file target/universal/play-traffic-1.0-SNAPSHOT.tgz wil have been created.
+You can copy this file to your target platform, and extract it in a working folder:
+
+tar xvfz play-traffic-1.0-SNAPSHOT.tgz
+
+Execute the following commands to get the server started
+cd play-traffic-1.0-SNAPSHOT
+bin/play-traffic -Dhttp.port=9000 -Dakka.remote.netty.tcp.port=2552
+
+To deploy a cluster, update conf/application.conf if necessary, and execute new nodes as follows:
+bin/play-traffic -Dhttp.port=0 -Dakka.remote.netty.tcp.port=0
+
 
 TODO
 ----
