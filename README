@@ -79,7 +79,7 @@ in the root of the checked out code.
 
 To start more nodes, and run the application as a cluster, execute
 ./activator run -Dhttp.port=N -Dakka.remote.netty.tcp.port=0
-(Replace N by a unique number. You could also use 0 but at the moment you need to refresh the web browser for the application to become active. Not sure why this is)
+(Replace N by a unique number. You could also use 0 but in development mode you need to refresh the web browser for the application to become active.)
 
 For detailed cluster configuration, see the akka documentation at
 http://doc.akka.io/docs/akka/2.4.1/scala/cluster-usage.html
@@ -88,6 +88,7 @@ conf/application.conf
 
 Building a production distribution
 ----------------------------------
+
 Prerequisites: the traffic database has been created
 In the root of the checked out code, execute: 
 
