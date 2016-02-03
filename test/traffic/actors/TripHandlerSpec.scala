@@ -144,8 +144,9 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
 
             val trip = makeTrip()
             val tripHandler = system.actorOf(TripHandler.props())
+            val update = RequestUpdateEvent(slide = None, velocity = Some(120000.0))
+
             tripHandler ! StartTrip(trip)
-            val update = RequestUpdateEvent(slide = None, velocity = Some(12000.0))
             tripHandler ! update
 
             val events: Seq[SubscriberEvent] = receiveN(18, 2000.millis).flatMap {

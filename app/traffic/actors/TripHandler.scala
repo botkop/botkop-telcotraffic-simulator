@@ -3,6 +3,8 @@ package traffic.actors
 import akka.actor.{Actor, ActorLogging, Props}
 import akka.routing.ConsistentHashingRouter.ConsistentHashable
 import squants._
+import squants.motion.KilometersPerHour
+import squants.time.Milliseconds
 import traffic.actors.LocationHandler.HandleLocation
 import traffic.model.Trip
 import traffic.protocol.RequestUpdateEvent
@@ -16,8 +18,17 @@ class TripHandler() extends Actor with ActorLogging {
 
     val locationHandler = context.actorOf(LocationHandler.props())
 
-    var slideFactor: Double = 1.0
-    var speedFactor: Double = 1.0
+    /*
+    must initialize below variables, because a 'stand-by' TripHandler actor may have been created in the pool
+    and update requests (via Broadcast) can arrive before start requests
+    alternatively, an update request could be broadcasted just after creation of the pool, and before start requests
+     */
+    case class TripFactors(speed: Velocity = KilometersPerHour(0), slide: Time = Milliseconds(0)) {
+        val slideDuration = Duration(slide.millis, MILLISECONDS)
+        val slideDistance = speed * slide
+    }
+
+    var tripFactors = TripFactors()
 
     def continueTrip(trip: Trip): Unit =  {
         if (trip.distanceCovered >= trip.totalDistance) {
@@ -28,35 +39,31 @@ class TripHandler() extends Actor with ActorLogging {
             context.stop(self)
         }
         else {
-            val slide = trip.slide * slideFactor
-            val slideDuration = Duration(slide.millis, MILLISECONDS)
-            val slideDistance: Length = (trip.velocity * speedFactor) * slide
-            val nextTrip = Trip(trip, trip.distanceCovered + slideDistance)
+            val nextTrip = Trip(trip, trip.distanceCovered + tripFactors.slideDistance)
             locationHandler ! HandleLocation(nextTrip)
-
-            context.system.scheduler.scheduleOnce(slideDuration, self, ContinueTrip(nextTrip))
+            context.system.scheduler.scheduleOnce(tripFactors.slideDuration, self, ContinueTrip(nextTrip))
         }
     }
 
     def startTrip(trip: Trip): Unit = {
         log.info("trip {}: starting", trip.bearerId)
+        tripFactors = TripFactors(trip.velocity, trip.slide)
         continueTrip(trip)
     }
 
     def requestUpdate(update: RequestUpdateEvent) = {
         update.slide match {
             case Some(d) =>
-                // TODO: fix hardcoding
-                slideFactor = d / 500.0
+                tripFactors = TripFactors(tripFactors.speed, Milliseconds(d))
             case None =>
         }
 
         update.velocity match {
             case Some(d) =>
-                // TODO: this is a temporary solution until we implement variable speed per trip
-                speedFactor = d / 120.0
+                tripFactors = TripFactors(KilometersPerHour(d), tripFactors.slide)
             case None =>
         }
+
     }
 
     override def receive = {

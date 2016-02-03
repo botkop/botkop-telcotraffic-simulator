@@ -6,7 +6,7 @@ object FakeTestApp {
 
     // override test configuration here
     val config = Map(
-        "messageBroker" -> "logBroker"
+        "messageBrokers" -> List("logBroker")
     )
 
     def apply() = FakeApplication(additionalConfiguration = config)

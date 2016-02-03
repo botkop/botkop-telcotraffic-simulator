@@ -51,7 +51,7 @@ class TrafficSimulator() extends Actor with ActorLogging {
         // also don't understand why declaring the router globally in the class only works for 1 request
         // val router = context.actorOf(routerProps, "TripRouter")
 
-        router = context.actorOf(pool.props(Props[TripHandler]))
+        router = context.actorOf(pool.props(TripHandler.props()))
 
         log.info("starting simulation")
         for (i <- 1 to currentRequest.numTrips) {
