@@ -9,5 +9,5 @@ then
     exit -1
 fi
 
-wget "http://opencellid.org/downloads/?apiKey=$api_key&filename=cell_towers.csv.gz" -O - | gunzip -c > dist/cell_towers.csv
+wget "http://opencellid.org/downloads/?apiKey=$api_key&filename=cell_towers.csv.gz" -O - | gunzip -c > data/cell_towers.csv
 

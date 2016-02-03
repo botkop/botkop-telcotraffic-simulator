@@ -8,7 +8,7 @@ target
 /.settings
 /RUNNING_PID
 *.swp
-dist/*.csv
-dist/traffic.db
+data/*.csv
+dist/data/traffic.db
 node_modules
 

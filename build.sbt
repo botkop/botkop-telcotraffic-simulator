@@ -38,7 +38,7 @@ routesGenerator := InjectedRoutesGenerator
 
 scalacOptions ++= Seq("-feature")
 
-// durning development the database is in the dist folder, so it will be included with production distributions
-// in production deployment it will be in the root
-PlayKeys.devSettings += ("db.default.url", "jdbc:sqlite:dist/traffic.db")
+// durning development the database is in the dist/data folder, so it will be included with production distributions
+// in production deployment it will be in the data/ folder.
+PlayKeys.devSettings += ("db.default.url", "jdbc:sqlite:dist/data/traffic.db")
 
