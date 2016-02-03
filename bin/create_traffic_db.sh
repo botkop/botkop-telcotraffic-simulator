@@ -1,7 +1,7 @@
-gunzip -c data/identities.csv.gz > data/identities.csv
-gunzip -c data/phone_ids.csv.gz > data/phone_ids.csv
+gunzip -c dist/identities.csv.gz > dist/identities.csv
+gunzip -c dist/phone_ids.csv.gz > dist/phone_ids.csv
 
-sqlite3 data/traffic.db <<-EOF
+sqlite3 dist/traffic.db <<-EOF
 
 .mode csv
 
@@ -25,7 +25,7 @@ CREATE TABLE cell_towers(
   "updated" TEXT,
   "averageSignal" TEXT
 );
-.import data/cell_towers.csv cell_towers
+.import dist/cell_towers.csv cell_towers
 CREATE INDEX mcc_net_idx on cell_towers(mcc, net);
 
 CREATE TABLE identities(
@@ -74,7 +74,7 @@ CREATE TABLE identities(
   "Latitude" TEXT,
   "Longitude" TEXT
 );
-.import data/identities.csv identities
+.import dist/identities.csv identities
 
 CREATE TABLE phone_ids(
   "id" INTEGER,
@@ -82,7 +82,7 @@ CREATE TABLE phone_ids(
   "msisdn" TEXT,
   "imei" TEXT
 );
-.import data/phone_ids.csv phone_ids
+.import dist/phone_ids.csv phone_ids
 
 EOF
 
