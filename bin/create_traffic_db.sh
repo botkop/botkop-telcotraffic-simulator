@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 gunzip -c data/identities.csv.gz > data/identities.csv
 gunzip -c data/phone_ids.csv.gz > data/phone_ids.csv
 
