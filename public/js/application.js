@@ -5,6 +5,7 @@ var subscribers = [];
 var celltowers = [];
 var subscriberToFollow;
 var celltowerCluster;
+var isRunning = false;
 
 /* constants */
 var connectedCellTowerIcon = imageFolder + "/cell-tower-green.png";
@@ -23,6 +24,13 @@ var mapOptions = {
 var socket;
 
 function startSimulator() {
+    sendRequest("start");
+    if ($('#showTowers').prop('checked')){
+        showTowers();
+    }
+};
+
+function sendRequest(action) {
     /* force these values to be numeric, otherwise json will contain strings */
     mcc = parseInt($('#mcc').val());
     mnc = parseInt($('#mnc').val());
@@ -38,16 +46,12 @@ function startSimulator() {
         slide: slideSize,
         topic: "request-topic"
     };
-    var message = { action: "start", request: request };
+    var message = { action: action, request: request };
     var json = JSON.stringify(message);
 
     console.log("sending request to socket: " + json);
     socket.send(json);
-
-    if ($('#showTowers').prop('checked')){
-        showTowers();
-    }
-};
+}
 
 function stopSimulator() {
     var message = { action: "stop" };
@@ -57,9 +61,9 @@ function stopSimulator() {
 /*
 Web socket triggers
 */
-
 var socketOnOpen = function(msg) {
-    console.log("websocket opened")
+    console.log("websocket opened");
+    sendRequest("init");
 };
 
 var socketOnClose = function(msg) {
@@ -79,8 +83,10 @@ var socketOnMessage = function(msg) {
         return;
     }
 
-    // todo: handle requests from browsers and rest
-    // update input parameters
+    if (event.action != null) {
+        handleAction(event);
+        return;
+    }
 
     console.log("websocket received unknown message: " + JSON.stringify(msg.data));
 };
@@ -107,12 +113,14 @@ function initialize() {
     /*
     UI handling
     */
-    $('#startButton').click(function() {
-        startSimulator();
-    });
-
-    $('#stopButton').click(function() {
-        stopSimulator();
+    $( "#startStop" ).button();
+    $( "#startStop" ).change(function(){
+        if (this.checked) {
+            startSimulator();
+        }
+        else {
+            stopSimulator();
+        }
     });
 
     $('#unfollowButton').click(function() {
@@ -129,14 +137,14 @@ function initialize() {
     });
 
     $( "#slideSizeSlider" ).slider({
-        min: 100,
+        min: 10,
         max: 10000,
-        step: 100,
+        step: 10,
         value: 500,
         slide: function( event, ui ) {
             $( "#slideSize" ).val( ui.value );
         },
-        change: function( event, ui ) {
+        stop: function( event, ui ) {
             socketUpdateSlide(ui.value);
         }
     });
@@ -151,7 +159,7 @@ function initialize() {
         slide: function( event, ui ) {
             $( "#velocity" ).val( ui.value );
         },
-        change: function( event, ui ) {
+        stop: function( event, ui ) {
             socketUpdateVelocity(ui.value);
         }
     });
@@ -267,6 +275,59 @@ function showTowers(){
 function hideTowers(){
     console.log("clearing celltower cluster")
     celltowerCluster.clearMarkers();
+}
+
+function handleAction(event) {
+    console.log(event);
+
+    if (event.action == "update") {
+        if (event.request.velocity != null) {
+            $('#velocitySlider').slider("value", event.request.velocity);
+            $( "#velocity" ).val(event.request.velocity);
+        }
+
+        if (event.request.slide != null) {
+            $('#slideSizeSlider').slider("value", event.request.slide);
+            $( "#slideSize" ).val(event.request.slide);
+        }
+    }
+
+    if (event.action == "stop") {
+        for (id in celltowers) {
+            var marker = celltowers[id];
+            marker.setMap(null);
+        }
+        celltowers = [];
+
+        for (id in subscribers) {
+            var marker = subscribers[id];
+            marker.setMap(null);
+        }
+        subscribers = [];
+
+        $( "#startStop" ).button({label: "Start" });
+    }
+
+    if (event.action == "start") {
+        updateRequest(event);
+        $("#startStop").button({label: "Stop" });
+    }
+
+    if (event.action == "current") {
+        updateRequest(event);
+    }
+
+}
+
+function updateRequest(event) {
+    var r = event.request;
+    $('#mcc').val(r.mcc);
+    $('#mnc').val(r.mnc);
+    $('#numTrips').val(r.numTrips);
+    $('#velocity').val(r.velocity);
+    $('#velocitySlider').slider("value", r.velocity);
+    $('#slideSize').val(r.slide);
+    $('#slideSizeSlider').slider("value", r.slide);
 }
 
 google.maps.event.addDomListener(window, 'load', initialize);

@@ -12,6 +12,7 @@ import play.api.Configuration
 import play.api.Play.current
 import play.api.libs.json.Json
 import play.api.mvc._
+import traffic.actors.TrafficSimulator.CurrentRequest
 import traffic.actors.{SimulatorSocket, TrafficSimulator}
 import traffic.brokers.{MessageBroker, MessageProvider}
 import traffic.model.Celltower
@@ -33,7 +34,7 @@ class Application @Inject() (val system: ActorSystem) extends Controller with La
         settings = ClusterSingletonManagerSettings(system).withRole("simulate")),
         name = "TrafficSimulator")
 
-    system.actorOf(ClusterSingletonProxy.props(
+    val trafficSimulatorProxy = system.actorOf(ClusterSingletonProxy.props(
         singletonManagerPath = "/user/TrafficSimulator",
         settings = ClusterSingletonProxySettings(system).withRole("simulate")),
         name = "TrafficSimulatorProxy")
@@ -105,10 +106,13 @@ class Application @Inject() (val system: ActorSystem) extends Controller with La
     /**
       * Socket for HTTP clients
       */
-    def simulatorSocket() = WebSocket.acceptWithActor[String, String] { req => out =>
+    def simulatorSocket() = WebSocket.acceptWithActor[String, String] { req => socket =>
         logger.debug("establishing connection to websocket")
 
-        SimulatorSocket.props(out)
+        // push current state to socket
+        trafficSimulatorProxy ! CurrentRequest(socket)
+
+        SimulatorSocket.props(socket)
     }
 
 }

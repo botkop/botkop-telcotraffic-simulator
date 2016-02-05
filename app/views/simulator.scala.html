@@ -3,11 +3,16 @@
 @main("Traffic Simulator") {
 
     <div id="selection-area">
+
+
             <label for="mcc">MCC:</label>
             <input type="text" id="mcc" value="206"/>
 
             <label for="mnc">MNC:</label>
             <input type="text" id="mnc" value="20">
+
+            <a href="https://en.wikipedia.org/wiki/Mobile_country_code#A" target="_blank">See this link for MCC and MNC info</a>
+            <p>
 
             <label for="numTrips">#Trips:</label>
             <input type="text" id="numTrips" value="2">
@@ -27,8 +32,9 @@
             <input type="checkbox" id="showTowers"><label for="showTowers">Show towers</label>
             <p>
 
-            <button id="startButton">Start</button>
-            <button id="stopButton">Stop</button>
+            <input type="checkbox" id="startStop"><label for="startStop">Start</label>
+            <p>
+
             <button id="unfollowButton">Unfollow</button>
 
     </div>

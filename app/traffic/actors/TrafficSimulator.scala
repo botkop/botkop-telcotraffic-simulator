@@ -15,6 +15,8 @@ import traffic.protocol.{RequestEvent, RequestUpdateEvent}
 
 class TrafficSimulator() extends Actor with ActorLogging {
 
+    import TrafficSimulator._
+
     val mediator = DistributedPubSub(context.system).mediator
     mediator ! Subscribe("request-topic", self)
 
@@ -30,9 +32,14 @@ class TrafficSimulator() extends Actor with ActorLogging {
 
     var router: ActorRef = context.actorOf(Props.empty)
 
+    def initState(json: JsValue) = {
+        currentRequest = (json \ "request").as[RequestEvent]
+        log.debug("initializing state as: {}", currentRequest.toString)
+    }
+
     def startSimulation(json: JsValue) = {
 
-        currentRequest = (json \ "request").as[RequestEvent]
+        initState(json)
 
         // stop running simulation before starting a new one
         stopSimulation()
@@ -58,7 +65,6 @@ class TrafficSimulator() extends Actor with ActorLogging {
             val trip = Trip.random(currentRequest.mcc, currentRequest.mnc, velocity, slide)
             router ! StartTrip(trip)
         }
-
     }
 
     def stopSimulation() = {
@@ -69,6 +75,18 @@ class TrafficSimulator() extends Actor with ActorLogging {
     def updateSimulation(json: JsValue) = {
         val r = (json \ "request").as[RequestUpdateEvent]
         log.info("request update event: " + r.toString)
+
+        if (currentRequest != null) {
+            r.slide match {
+                case Some(d: Double) => currentRequest.slide = d
+                case _ =>
+            }
+            r.velocity match {
+                case Some(d: Double) => currentRequest.velocity = d
+                case _ =>
+            }
+        }
+
         router ! Broadcast(r)
     }
 
@@ -79,6 +97,15 @@ class TrafficSimulator() extends Actor with ActorLogging {
             case "start" => startSimulation(json)
             case "update" => updateSimulation(json)
             case "stop" => stopSimulation()
+
+            /*
+            initialize the current request with info coming from user interface
+            this should only be done once
+            this is not required when using rest, since start requests will overwrite the current state
+             */
+            case "init" if currentRequest == null => initState(json)
+
+            case _ =>
         }
     }
 
@@ -86,11 +113,25 @@ class TrafficSimulator() extends Actor with ActorLogging {
         /*
         received from mediator: parse message and execute actions
         */
-        case request: JsValue => interpreteRequest(request)
+        case request: JsValue => 
+            interpreteRequest(request)
+
+        /*
+        update user interface with the current state
+        this gets executed when a new web socket is created
+        see Application.scala
+         */
+        case CurrentRequest(webSocket) if currentRequest != null =>
+            val message = s"""{
+                   |  "action": "current",
+                   |  "request": ${Json.stringify(Json.toJson(currentRequest))}
+                   |}""".stripMargin
+            webSocket ! message
     }
 }
 
 object TrafficSimulator {
     def props() = Props(new TrafficSimulator())
+    case class CurrentRequest(socket: ActorRef)
 }
 
