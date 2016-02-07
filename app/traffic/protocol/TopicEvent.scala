@@ -2,6 +2,7 @@ package traffic.protocol
 
 import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.Publish
+import play.api.libs.json.Json
 import play.libs.Akka
 
 abstract class TopicEvent(topic: String) extends Serializable {

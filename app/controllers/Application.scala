@@ -63,6 +63,9 @@ class Application @Inject() (val system: ActorSystem) extends Controller with La
                 broker
             }.toList
 
+        /*
+        todo: this should not be a singleton, except for the websocketBroker
+         */
         system.actorOf(ClusterSingletonManager.props(
             singletonProps = MessageProvider.props(brokers),
             terminationMessage = PoisonPill,

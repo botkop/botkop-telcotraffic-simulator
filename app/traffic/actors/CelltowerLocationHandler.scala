@@ -1,22 +1,24 @@
 package traffic.actors
 
+import java.util
+import java.util.UUID
+
 import akka.actor._
 import breeze.stats.distributions.Gaussian
 import play.api.Configuration
 import play.api.Play.current
-import traffic.actors.CelltowerEventHandler.EmitCelltowerEvent
+import traffic.actors.CelltowerEventHandler.{EmitCelltowerAttachEvent, EmitCelltowerEvent}
 import traffic.model.{Celltower, CelltowerCache, Trip}
 
 import scala.collection.JavaConversions._
 
-case class MetricTemplate(name: String, dist: Gaussian)
+case class MetricTemplate(name: String, dist: Gaussian, anomalyFreq: Int)
 case class CelltowerTemplate(name: String, metrics: List[MetricTemplate])
 
 class CelltowerLocationHandler() extends Actor with ActorLogging {
 
     import CelltowerLocationHandler._
 
-    // val celltowerCache = CelltowerCache(mcc, mnc)
     var cache: Option[CelltowerCache] = None
     def celltowerCache(mcc: Int, mnc: Int): CelltowerCache = cache match {
         case None =>
@@ -30,14 +32,15 @@ class CelltowerLocationHandler() extends Actor with ActorLogging {
 
     val templates: List[CelltowerTemplate] = templatesConfig.map { template =>
         val templateName = template.getString("name").get
-        val metricsConfig = template.getConfigList("metrics").get
+        val metricsConfig: util.List[Configuration] = template.getConfigList("metrics").get
 
         val metrics = for (
             mc: Configuration <- metricsConfig;
             metricName = mc.getString("name").get;
             mean = mc.getDouble("mean").get;
             std = mc.getDouble("std").get;
-            metricTemplate = MetricTemplate(metricName, Gaussian(mean, std))
+            anomalyFreq = mc.getInt("anomalyFrequency").getOrElse(0);
+            metricTemplate = MetricTemplate(metricName, Gaussian(mean, std), anomalyFreq)
         ) yield metricTemplate
         CelltowerTemplate(templateName, metrics.toList)
     }.toList
@@ -55,6 +58,8 @@ class CelltowerLocationHandler() extends Actor with ActorLogging {
         actor
     })
 
+    var tripMap = Set.empty[UUID]
+
     override def receive = {
         case HandleCelltowerLocation(trip) =>
             handleCelltowerLocation(trip)
@@ -68,7 +73,14 @@ class CelltowerLocationHandler() extends Actor with ActorLogging {
             case Some(location) =>
                 val celltower: Celltower = celltowerCache(trip.mcc, trip.mnc).getNearest(location)
                 val celltowerActor = getCelltowerActor(celltower)
-                celltowerActor ! EmitCelltowerEvent(trip.bearerId)
+                celltowerActor ! EmitCelltowerEvent(trip)
+
+                if (! tripMap(trip.bearerId)) {
+                    log.debug("emitting attach event for {}", trip.bearerId.toString)
+                    celltowerActor ! EmitCelltowerAttachEvent(trip)
+                    tripMap = tripMap + trip.bearerId
+                }
+
             case None =>
                 log.error("unable to obtain location")
         }
