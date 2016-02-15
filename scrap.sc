@@ -1,4 +1,12 @@
 
+def brol:Boolean = if(true) {
+    true
+}
+else {
+    false
+}
+
+
 class A {
     def p() = {
         println("in class A")

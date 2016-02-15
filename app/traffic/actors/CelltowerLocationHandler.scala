@@ -7,7 +7,7 @@ import akka.actor._
 import breeze.stats.distributions.Gaussian
 import play.api.Configuration
 import play.api.Play.current
-import traffic.actors.CelltowerEventHandler.{EmitCelltowerAttachEvent, EmitCelltowerEvent}
+import traffic.actors.CelltowerEventHandler.{EmitAttachEvent, EmitCelltowerEvent}
 import traffic.model.{Celltower, CelltowerCache, Trip}
 
 import scala.collection.JavaConversions._
@@ -18,15 +18,6 @@ case class CelltowerTemplate(name: String, metrics: List[MetricTemplate])
 class CelltowerLocationHandler() extends Actor with ActorLogging {
 
     import CelltowerLocationHandler._
-
-    var cache: Option[CelltowerCache] = None
-    def celltowerCache(mcc: Int, mnc: Int): CelltowerCache = cache match {
-        case None =>
-            cache = Some(CelltowerCache(mcc, mnc))
-            cache.get
-        case _ =>
-            cache.get
-    }
 
     val templatesConfig = current.configuration.getConfigList("celltower-templates").get
 
@@ -71,15 +62,17 @@ class CelltowerLocationHandler() extends Actor with ActorLogging {
     def handleCelltowerLocation(trip: Trip): Unit = {
         trip.currentLocation match {
             case Some(location) =>
-                val celltower: Celltower = celltowerCache(trip.mcc, trip.mnc).getNearest(location)
+                val celltower: Celltower = CelltowerCache(trip.mcc, trip.mnc).getNearest(location)
                 val celltowerActor = getCelltowerActor(celltower)
-                celltowerActor ! EmitCelltowerEvent(trip)
 
+                // first time the subscriber connects ?
                 if (! tripMap(trip.bearerId)) {
                     log.debug("emitting attach event for {}", trip.bearerId.toString)
-                    celltowerActor ! EmitCelltowerAttachEvent(trip)
-                    tripMap = tripMap + trip.bearerId
+                    celltowerActor ! EmitAttachEvent(trip)
+                    tripMap += trip.bearerId
                 }
+
+                celltowerActor ! EmitCelltowerEvent(trip)
 
             case None =>
                 log.error("unable to obtain location")

@@ -3,7 +3,7 @@ package traffic.actors
 import akka.actor.{Actor, ActorLogging, Props}
 import breeze.stats.distributions.Gaussian
 import traffic.model.{Celltower, Trip}
-import traffic.protocol.{CelltowerAttachEvent, CelltowerEvent}
+import traffic.protocol.{AttachEvent, CelltowerEvent}
 
 class CelltowerEventHandler(celltower: Celltower, template: CelltowerTemplate) extends Actor with ActorLogging {
 
@@ -35,15 +35,15 @@ class CelltowerEventHandler(celltower: Celltower, template: CelltowerTemplate) e
     }
 
     def emitAttachEvent(trip: Trip): Unit = {
-        val cle = CelltowerAttachEvent(celltower, trip.bearerId.toString, trip.subscriber)
-        cle.publish()
+        val cae = AttachEvent(trip.bearerId.toString, trip.subscriber)
+        cae.publish()
     }
 
     override def receive: Receive = {
         case EmitCelltowerEvent(trip) =>
             log.debug("emitting event for {}", trip.bearerId)
             emitEvent(trip)
-        case EmitCelltowerAttachEvent(trip) =>
+        case EmitAttachEvent(trip) =>
             emitAttachEvent(trip)
     }
 
@@ -53,6 +53,6 @@ object CelltowerEventHandler {
     def props(celltower: Celltower, template: CelltowerTemplate) =
         Props(new CelltowerEventHandler(celltower, template))
     case class EmitCelltowerEvent(trip: Trip)
-    case class EmitCelltowerAttachEvent(trip: Trip)
+    case class EmitAttachEvent(trip: Trip)
 }
 

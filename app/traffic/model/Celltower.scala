@@ -85,16 +85,16 @@ case class CelltowerCache(cache: List[Celltower]) {
                 minDist = dist
                 minCelltower = ct
             }
-
         }
         minCelltower
     }
 }
 
 object CelltowerCache {
-    def apply(mcc: Int, mnc: Int): CelltowerCache = {
-        val cache: List[Celltower] = Celltower.getAll(mcc, mnc)
-        CelltowerCache(cache)
+    var cache: Option[CelltowerCache] = None
+    def apply(mcc: Int, mnc: Int): CelltowerCache = cache.getOrElse {
+        cache = Some(CelltowerCache(Celltower.getAll(mcc, mnc)))
+        cache.get
     }
 }
 

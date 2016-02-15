@@ -1,10 +1,10 @@
 package traffic.brokers
 
-import akka.actor.{Props, Actor}
+import akka.actor.{Actor, Props}
 import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.Subscribe
 import play.api.libs.json.Json
-import traffic.protocol.{CelltowerAttachEvent, TopicEvent, CelltowerEvent, SubscriberEvent}
+import traffic.protocol.{AttachEvent, CelltowerEvent, SubscriberEvent}
 
 class MessageProvider(brokers: List[MessageBroker]) extends Actor {
 
@@ -12,7 +12,7 @@ class MessageProvider(brokers: List[MessageBroker]) extends Actor {
 
     mediator ! Subscribe("subscriber-topic", self)
     mediator ! Subscribe("celltower-topic", self)
-    mediator ! Subscribe("celltower-attach-topic", self)
+    mediator ! Subscribe("attach-topic", self)
 
     override def receive: Receive = {
         case event: SubscriberEvent =>
@@ -21,7 +21,7 @@ class MessageProvider(brokers: List[MessageBroker]) extends Actor {
         case event: CelltowerEvent =>
             val message = Json.stringify(Json.toJson(event))
             brokers.foreach(_.send(event.topic, message))
-        case event: CelltowerAttachEvent =>
+        case event: AttachEvent =>
             val message = Json.stringify(Json.toJson(event))
             brokers.foreach(_.send(event.topic, message))
     }

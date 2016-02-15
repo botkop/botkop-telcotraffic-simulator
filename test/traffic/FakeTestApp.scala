@@ -6,7 +6,8 @@ object FakeTestApp {
 
     // override test configuration here
     val config = Map(
-        "messageBrokers" -> List("logBroker")
+        "messageBrokers" -> List("logBroker"),
+        "db.default.url" -> "jdbc:sqlite:dist/data/traffic.db"
     )
 
     def apply() = FakeApplication(additionalConfiguration = config)
