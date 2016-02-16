@@ -7,10 +7,11 @@ import squants.motion.KilometersPerHour
 import squants.time.Milliseconds
 import traffic.actors.LocationHandler.HandleLocation
 import traffic.model.Trip
-import traffic.protocol.RequestUpdateEvent
+import traffic.protocol.{RequestEvent, RequestUpdateEvent}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
+import scala.util.Random
 
 class TripHandler() extends Actor with ActorLogging {
 
@@ -36,7 +37,12 @@ class TripHandler() extends Actor with ActorLogging {
             locationHandler ! HandleLocation(nextTrip)
             log.info("trip {}: finished", trip.bearerId)
 
-            context.stop(self)
+            // context.stop(self)
+
+            // start a new trip
+            val newTrip = Trip.random(trip.mcc, trip.mnc, trip.velocity, trip.slide)
+            log.info("trip {}: starting", newTrip.bearerId)
+            continueTrip(newTrip)
         }
         else {
             val nextTrip = Trip(trip, trip.distanceCovered + tripFactors.slideDistance)
@@ -45,7 +51,16 @@ class TripHandler() extends Actor with ActorLogging {
         }
     }
 
+    /*
     def startTrip(trip: Trip): Unit = {
+        log.info("trip {}: starting", trip.bearerId)
+        tripFactors = TripFactors(trip.velocity, trip.slide)
+        continueTrip(trip)
+    }
+    */
+
+    def startTrip(request: RequestEvent): Unit = {
+        val trip = Trip.random(request.mcc, request.mnc, KilometersPerHour(request.velocity), Milliseconds(request.slide))
         log.info("trip {}: starting", trip.bearerId)
         tripFactors = TripFactors(trip.velocity, trip.slide)
         continueTrip(trip)
@@ -67,12 +82,19 @@ class TripHandler() extends Actor with ActorLogging {
     }
 
     override def receive = {
+        /*
         case StartTrip(trip) =>
             startTrip(trip)
+        */
+        case StartTrip(request) =>
+            startTrip(request)
+
         case ContinueTrip(trip) =>
             continueTrip(trip)
+
         case update: RequestUpdateEvent =>
             requestUpdate(update)
+
         case StopTrip =>
             context.stop(self)
     }
@@ -80,8 +102,16 @@ class TripHandler() extends Actor with ActorLogging {
 
 object TripHandler {
 
+    /*
     case class StartTrip(trip: Trip) extends ConsistentHashable {
         override def consistentHashKey: Any = trip.bearerId
+    }
+    */
+
+    case class StartTrip(request: RequestEvent) extends ConsistentHashable {
+        // todo: a random is probably not the best hashing key for the pool
+        // or maybe we should not use a hashing pool in the first place
+        override def consistentHashKey: Any = Random.nextInt
     }
 
     case class ContinueTrip(trip: Trip)

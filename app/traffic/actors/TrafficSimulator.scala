@@ -1,16 +1,13 @@
 package traffic.actors
 
-import akka.actor.{ActorRef, Actor, ActorLogging, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.Subscribe
 import akka.cluster.routing.{ClusterRouterPool, ClusterRouterPoolSettings}
 import akka.routing.{Broadcast, ConsistentHashingPool}
 import play.api.Play.current
 import play.api.libs.json.{JsValue, Json}
-import squants.motion.KilometersPerHour
-import squants.time.Milliseconds
-import traffic.actors.TripHandler.{StopTrip, StartTrip}
-import traffic.model._
+import traffic.actors.TripHandler.{StartTrip, StopTrip}
 import traffic.protocol.{RequestEvent, RequestUpdateEvent}
 
 class TrafficSimulator() extends Actor with ActorLogging {
@@ -46,8 +43,10 @@ class TrafficSimulator() extends Actor with ActorLogging {
 
         log.info("starting simulation")
 
+        /*
         val slide = Milliseconds(currentRequest.slide)
         val velocity = KilometersPerHour(currentRequest.velocity)
+        */
 
         // get router configuration from config file
         // this would be ideal, but I do not know how to obtain a configuration without specifying a name
@@ -62,8 +61,11 @@ class TrafficSimulator() extends Actor with ActorLogging {
 
         log.info("starting simulation")
         for (i <- 1 to currentRequest.numTrips) {
+            /*
             val trip = Trip.random(currentRequest.mcc, currentRequest.mnc, velocity, slide)
             router ! StartTrip(trip)
+            */
+            router ! StartTrip(currentRequest)
         }
     }
 

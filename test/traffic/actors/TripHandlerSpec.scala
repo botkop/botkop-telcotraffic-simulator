@@ -78,7 +78,8 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
             val trip = Trip(mcc, mnc, sub, Route(route), KilometersPerHour(120), slide)
 
             val tripHandler = system.actorOf(TripHandler.props())
-            tripHandler ! StartTrip(trip)
+            // tripHandler ! StartTrip(trip)
+            tripHandler ! ContinueTrip(trip)
 
             val events: Seq[CelltowerEvent] = receiveN(18, 2000.millis).flatMap {
                 case event: CelltowerEvent => Some(event)
@@ -101,7 +102,8 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
 
             val trip = makeTrip()
             val tripHandler = system.actorOf(TripHandler.props())
-            tripHandler ! StartTrip(trip)
+            // tripHandler ! StartTrip(trip)
+            tripHandler ! ContinueTrip(trip)
 
             val events: Seq[SubscriberEvent] = receiveN(18, 2000.millis).flatMap {
                 case event: SubscriberEvent => Some(event)
@@ -122,7 +124,8 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
 
             val trip = makeTrip()
             val tripHandler = system.actorOf(TripHandler.props())
-            tripHandler ! StartTrip(trip)
+            // tripHandler ! StartTrip(trip)
+            tripHandler ! ContinueTrip(trip)
 
             val events: Seq[SubscriberEvent] = receiveN(18, 2000.millis).flatMap {
                 case event: SubscriberEvent => Some(event)
@@ -146,7 +149,8 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
             val tripHandler = system.actorOf(TripHandler.props())
             val update = RequestUpdateEvent(slide = None, velocity = Some(120000.0))
 
-            tripHandler ! StartTrip(trip)
+            // tripHandler ! StartTrip(trip)
+            tripHandler ! ContinueTrip(trip)
             tripHandler ! update
 
             val events: Seq[SubscriberEvent] = receiveN(18, 2000.millis).flatMap {
@@ -171,8 +175,11 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
 
             val trip = makeTrip()
             val tripHandler = system.actorOf(TripHandler.props())
+            // tripHandler ! StartTrip(trip)
+            tripHandler ! RequestUpdateEvent(slide = Some(125.0), velocity = None)
+            tripHandler ! ContinueTrip(trip)
+
             val update = RequestUpdateEvent(slide = Some(125.0), velocity = None)
-            tripHandler ! StartTrip(trip)
             tripHandler ! update
 
             // receiving 28 messages is already a test

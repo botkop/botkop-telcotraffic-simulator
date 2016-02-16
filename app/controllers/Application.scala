@@ -3,10 +3,10 @@ package controllers
 import java.util
 import javax.inject.{Inject, Singleton}
 
-import akka.actor.{PoisonPill, ActorSystem}
+import akka.actor.{ActorSystem, PoisonPill}
 import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.Publish
-import akka.cluster.singleton.{ClusterSingletonProxy, ClusterSingletonProxySettings, ClusterSingletonManager, ClusterSingletonManagerSettings}
+import akka.cluster.singleton.{ClusterSingletonManager, ClusterSingletonManagerSettings, ClusterSingletonProxy, ClusterSingletonProxySettings}
 import com.typesafe.scalalogging.LazyLogging
 import play.api.Configuration
 import play.api.Play.current
