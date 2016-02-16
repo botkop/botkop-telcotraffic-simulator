@@ -29,7 +29,6 @@ class CelltowerEventHandler(celltower: Celltower, template: CelltowerTemplate) e
         metrics += ("eventCounter" -> counter)
 
         val celltowerEvent = CelltowerEvent(celltower, trip.bearerId.toString, metrics)
-
         celltowerEvent.publish()
 
     }

@@ -1,16 +1,20 @@
 package traffic.protocol
 
-import akka.cluster.pubsub.DistributedPubSub
-import akka.cluster.pubsub.DistributedPubSubMediator.Publish
-import play.api.libs.json.Json
-import play.libs.Akka
+import traffic.brokers.ConfiguredBrokers
 
 abstract class TopicEvent(topic: String) extends Serializable {
 
+    /*
     lazy val mediator = DistributedPubSub(Akka.system()).mediator
 
     def publish() = {
         mediator ! Publish(topic, this)
     }
+    */
+
+    def publish() = {
+        ConfiguredBrokers.publish(this)
+    }
+
 }
 

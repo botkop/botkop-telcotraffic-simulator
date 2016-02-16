@@ -43,28 +43,18 @@ class TrafficSimulator() extends Actor with ActorLogging {
 
         log.info("starting simulation")
 
-        /*
-        val slide = Milliseconds(currentRequest.slide)
-        val velocity = KilometersPerHour(currentRequest.velocity)
-        */
-
         // get router configuration from config file
         // this would be ideal, but I do not know how to obtain a configuration without specifying a name
         // and if I set a name on the actor, then I can only use it once
         // val routerProps = FromConfig.props(Props[TripHandler])
-
-        // still do not understand why we sometimes can re-use the name of this actor
-        // also don't understand why declaring the router globally in the class only works for 1 request
         // val router = context.actorOf(routerProps, "TripRouter")
+
+        // also don't understand why declaring the router globally in the class only works for 1 request
 
         router = context.actorOf(pool.props(TripHandler.props()))
 
         log.info("starting simulation")
         for (i <- 1 to currentRequest.numTrips) {
-            /*
-            val trip = Trip.random(currentRequest.mcc, currentRequest.mnc, velocity, slide)
-            router ! StartTrip(trip)
-            */
             router ! StartTrip(currentRequest)
         }
     }

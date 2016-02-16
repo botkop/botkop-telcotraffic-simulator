@@ -37,8 +37,6 @@ class TripHandler() extends Actor with ActorLogging {
             locationHandler ! HandleLocation(nextTrip)
             log.info("trip {}: finished", trip.bearerId)
 
-            // context.stop(self)
-
             // start a new trip
             val newTrip = Trip.random(trip.mcc, trip.mnc, trip.velocity, trip.slide)
             log.info("trip {}: starting", newTrip.bearerId)
@@ -50,14 +48,6 @@ class TripHandler() extends Actor with ActorLogging {
             context.system.scheduler.scheduleOnce(tripFactors.slideDuration, self, ContinueTrip(nextTrip))
         }
     }
-
-    /*
-    def startTrip(trip: Trip): Unit = {
-        log.info("trip {}: starting", trip.bearerId)
-        tripFactors = TripFactors(trip.velocity, trip.slide)
-        continueTrip(trip)
-    }
-    */
 
     def startTrip(request: RequestEvent): Unit = {
         val trip = Trip.random(request.mcc, request.mnc, KilometersPerHour(request.velocity), Milliseconds(request.slide))
@@ -82,10 +72,7 @@ class TripHandler() extends Actor with ActorLogging {
     }
 
     override def receive = {
-        /*
-        case StartTrip(trip) =>
-            startTrip(trip)
-        */
+
         case StartTrip(request) =>
             startTrip(request)
 
@@ -101,12 +88,6 @@ class TripHandler() extends Actor with ActorLogging {
 }
 
 object TripHandler {
-
-    /*
-    case class StartTrip(trip: Trip) extends ConsistentHashable {
-        override def consistentHashKey: Any = trip.bearerId
-    }
-    */
 
     case class StartTrip(request: RequestEvent) extends ConsistentHashable {
         // todo: a random is probably not the best hashing key for the pool
