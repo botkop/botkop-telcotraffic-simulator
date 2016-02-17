@@ -19,6 +19,8 @@ class TripHandler() extends Actor with ActorLogging {
 
     val locationHandler = context.actorOf(LocationHandler.props())
 
+    var isStopped: Boolean = false
+
     /*
     must initialize below variables, because a 'stand-by' TripHandler actor may have been created in the pool
     and update requests (via Broadcast) can arrive before start requests
@@ -50,6 +52,7 @@ class TripHandler() extends Actor with ActorLogging {
     }
 
     def startTrip(request: RequestEvent): Unit = {
+        isStopped = false
         val trip = Trip.random(request.mcc, request.mnc, KilometersPerHour(request.velocity), Milliseconds(request.slide))
         log.info("trip {}: starting", trip.bearerId)
         tripFactors = TripFactors(trip.velocity, trip.slide)
@@ -76,14 +79,15 @@ class TripHandler() extends Actor with ActorLogging {
         case StartTrip(request) =>
             startTrip(request)
 
-        case ContinueTrip(trip) =>
+        case ContinueTrip(trip) if ! isStopped =>
             continueTrip(trip)
 
         case update: RequestUpdateEvent =>
             requestUpdate(update)
 
         case StopTrip =>
-            context.stop(self)
+            isStopped = true
+            // context.stop(self) // cannot use this, because it would kill the pool
     }
 }
 

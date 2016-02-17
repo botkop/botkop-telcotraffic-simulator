@@ -3,9 +3,7 @@ package traffic.actors
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.Subscribe
-import akka.cluster.routing.{ClusterRouterPool, ClusterRouterPoolSettings}
-import akka.routing.{Broadcast, ConsistentHashingPool}
-import play.api.Play.current
+import akka.routing.{Broadcast, FromConfig}
 import play.api.libs.json.{JsValue, Json}
 import traffic.actors.TripHandler.{StartTrip, StopTrip}
 import traffic.protocol.{RequestEvent, RequestUpdateEvent}
@@ -19,15 +17,11 @@ class TrafficSimulator() extends Actor with ActorLogging {
 
     var currentRequest: RequestEvent = _
 
-    val conf = current.configuration.getConfig("traffic.cluster.router.pool").get
-    val settings = ClusterRouterPoolSettings(
-        totalInstances = conf.getInt("total-instances").get,
-        maxInstancesPerNode = conf.getInt("max-instances-per-node").get,
-        allowLocalRoutees = conf.getBoolean("allow-local-routees").get,
-        useRole = conf.getString("use-role"))
-    val pool = ClusterRouterPool(ConsistentHashingPool(0), settings)
-
-    var router: ActorRef = context.actorOf(Props.empty)
+    /*
+    since the TrafficSimulator is a singleton, the router pool can only be created once
+     */
+    val routerProps = FromConfig.props(Props[TripHandler])
+    val router = context.actorOf(routerProps, "TripRouter")
 
     def initState(json: JsValue) = {
         currentRequest = (json \ "request").as[RequestEvent]
@@ -42,16 +36,6 @@ class TrafficSimulator() extends Actor with ActorLogging {
         stopSimulation()
 
         log.info("starting simulation")
-
-        // get router configuration from config file
-        // this would be ideal, but I do not know how to obtain a configuration without specifying a name
-        // and if I set a name on the actor, then I can only use it once
-        // val routerProps = FromConfig.props(Props[TripHandler])
-        // val router = context.actorOf(routerProps, "TripRouter")
-
-        // also don't understand why declaring the router globally in the class only works for 1 request
-
-        router = context.actorOf(pool.props(TripHandler.props()))
 
         log.info("starting simulation")
         for (i <- 1 to currentRequest.numTrips) {
