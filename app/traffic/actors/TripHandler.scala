@@ -52,8 +52,12 @@ class TripHandler() extends Actor with ActorLogging {
     }
 
     def startTrip(request: RequestEvent): Unit = {
-        isStopped = false
         val trip = Trip.random(request.mcc, request.mnc, KilometersPerHour(request.velocity), Milliseconds(request.slide))
+        startTrip(trip)
+    }
+
+    def startTrip(trip: Trip): Unit = {
+        isStopped = false
         log.info("trip {}: starting", trip.bearerId)
         tripFactors = TripFactors(trip.velocity, trip.slide)
         continueTrip(trip)
@@ -88,6 +92,9 @@ class TripHandler() extends Actor with ActorLogging {
         case StopTrip =>
             isStopped = true
             // context.stop(self) // cannot use this, because it would kill the pool
+
+        case trip: Trip => // used for unit testing only
+            startTrip(trip)
     }
 }
 
