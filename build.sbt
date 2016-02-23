@@ -1,4 +1,4 @@
-name := """play-traffic"""
+name := """botkop-telcotraffic-simulator"""
 
 version := "1.0-SNAPSHOT"
 
