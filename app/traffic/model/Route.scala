@@ -1,7 +1,7 @@
 package traffic.model
 
 import com.typesafe.scalalogging.LazyLogging
-import geo.{LatLng, Polyline}
+import botkop.geo.{LatLng, Polyline}
 import play.api.Play.current
 import play.api.libs.ws._
 import squants.motion.Distance

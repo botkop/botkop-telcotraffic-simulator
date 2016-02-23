@@ -2,7 +2,7 @@ package traffic.protocol
 
 import java.util.UUID
 
-import geo.LatLng
+import botkop.geo.LatLng
 import play.api.libs.json.Json
 import traffic.model.{Subscriber, Trip}
 

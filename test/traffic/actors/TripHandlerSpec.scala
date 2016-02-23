@@ -6,7 +6,7 @@ import akka.cluster.pubsub.DistributedPubSubMediator.Subscribe
 import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
-import geo.LatLng
+import botkop.geo.LatLng
 import org.scalatestplus.play.{OneAppPerSuite, PlaySpec}
 import play.api.libs.json.Json
 import play.api.test.FakeApplication
@@ -19,7 +19,10 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 
-
+/*
+note: cannot use TestKit, because that comes with its own ActorSystem
+that conflicts with the actor system from the application
+ */
 class TripHandlerSpec extends PlaySpec with LazyLogging with OneAppPerSuite {
 
     val defaultMcc = 206
@@ -34,7 +37,7 @@ class TripHandlerSpec extends PlaySpec with LazyLogging with OneAppPerSuite {
 
         "emit celltower messages along the route" in {
 
-            val setup = new SetUp(app.actorSystem, "celltower-topic")
+            val setup = new TestSetUp(app.actorSystem, "celltower-topic")
             val trip = defaultTrip
             setup.tripHandler ! trip
             Thread.sleep(2000)
@@ -54,7 +57,7 @@ class TripHandlerSpec extends PlaySpec with LazyLogging with OneAppPerSuite {
 
         "emit subscriber messages along the route" in {
 
-            val setup = new SetUp(app.actorSystem, "subscriber-topic")
+            val setup = new TestSetUp(app.actorSystem, "subscriber-topic")
             val trip = Trip(defaultMcc, defaultMnc, dummySubscriber, defaultRoute, MetersPerSecond(10000), Seconds(1))
             setup.tripHandler ! trip
             Thread.sleep(2100)
@@ -74,7 +77,7 @@ class TripHandlerSpec extends PlaySpec with LazyLogging with OneAppPerSuite {
 
         "allow dynamic speed update" in {
 
-            val setup = new SetUp(app.actorSystem, "subscriber-topic")
+            val setup = new TestSetUp(app.actorSystem, "subscriber-topic")
             val trip = defaultTrip
             val update = RequestUpdateEvent(None, Some(120000.0))
             setup.tripHandler ! trip
@@ -95,7 +98,7 @@ class TripHandlerSpec extends PlaySpec with LazyLogging with OneAppPerSuite {
 
         "allow dynamic slide update" in {
 
-            val setup = new SetUp(app.actorSystem, "subscriber-topic")
+            val setup = new TestSetUp(app.actorSystem, "subscriber-topic")
             val trip = defaultTrip
             val update = RequestUpdateEvent(Some(125), None)
             setup.tripHandler ! trip
@@ -136,7 +139,7 @@ class TripHandlerSpec extends PlaySpec with LazyLogging with OneAppPerSuite {
 
     case object Gimme
 
-    class SetUp(system: ActorSystem, topic: String) {
+    class TestSetUp(system: ActorSystem, topic: String) {
         val collector = system.actorOf(Props(new MessageCollector))
         val tripHandler = system.actorOf(TripHandler.props())
 

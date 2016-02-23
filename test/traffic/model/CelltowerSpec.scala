@@ -1,7 +1,7 @@
 package traffic.model
 
 import com.typesafe.scalalogging.LazyLogging
-import geo.LatLng
+import botkop.geo.LatLng
 import org.scalatest.{FlatSpec, Matchers}
 import play.api.test.WithApplication
 import traffic.FakeTestApp

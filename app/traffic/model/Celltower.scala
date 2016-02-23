@@ -3,7 +3,7 @@ package traffic.model
 import anorm.SqlParser._
 import anorm._
 import com.typesafe.scalalogging.LazyLogging
-import geo.LatLng
+import botkop.geo.LatLng
 import play.api.Play.current
 import play.api.db.DB
 import play.api.libs.json.Json

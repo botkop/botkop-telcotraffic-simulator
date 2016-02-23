@@ -2,7 +2,7 @@ package traffic.model
 
 import java.util.UUID
 
-import geo.LatLng
+import botkop.geo.LatLng
 import squants.Velocity
 import squants.motion._
 import squants.space.Meters
