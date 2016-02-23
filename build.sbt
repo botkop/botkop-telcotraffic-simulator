@@ -2,12 +2,11 @@ name := """play-traffic"""
 
 version := "1.0-SNAPSHOT"
 
-val botkopGeoProject = RootProject(uri("git://github.com/koen-dejonghe/botkop-geo.git"))
+val botkopGeoProject = RootProject(uri("git://github.com/botkop/botkop-geo.git"))
 lazy val root = (project in file(".")).enablePlugins(PlayScala).dependsOn(botkopGeoProject)
 
 scalaVersion := "2.11.7"
 val akkaVersion = "2.4.1"
-
 
 libraryDependencies ++= Seq(
     jdbc,
