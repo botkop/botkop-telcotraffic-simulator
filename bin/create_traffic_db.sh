@@ -3,6 +3,8 @@
 gunzip -c data/identities.csv.gz > data/identities.csv
 gunzip -c data/phone_ids.csv.gz > data/phone_ids.csv
 
+mkdir -p dist/data
+
 sqlite3 dist/data/traffic.db <<-EOF
 
 .mode csv
