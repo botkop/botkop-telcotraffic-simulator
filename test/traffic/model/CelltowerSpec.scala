@@ -21,7 +21,7 @@ class CelltowerSpec extends FlatSpec with Matchers with LazyLogging {
 
     }
 
-    "Celltower" should "return 5 getRandom celltowers" in new WithApplication(FakeTestApp()) {
+    "Celltower" should "return 5 random celltowers" in new WithApplication(FakeTestApp()) {
         val five = Celltower.getRandom(206, 10, 5)
         five.length should be (5)
     }
